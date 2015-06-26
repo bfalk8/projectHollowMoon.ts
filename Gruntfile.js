@@ -15,11 +15,11 @@ module.exports = function(grunt) {
     typescript: {
       base: {
         src: ['src/*.ts'],
-        dest: 'public/gameRes/scripts',
+        dest: 'public/gameRes/scripts/game.js',
         options: {
-          module: 'amd',
+          module: 'none',
           target: 'es5',
-          sourceMap: false,
+          sourceMap: true,
           declaration: false,
           references: ["bower_components/phaser/typescript/*.comments.d.ts",
             "bower_components/phaser/typescript/p2.d.ts"]
@@ -51,6 +51,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-concurrent');
 
   grunt.registerTask('default', ['concurrent:target']);
-  grunt.registerTask('compile', ['typescript', 'watch', 'nodemon']);
+  grunt.registerTask('compile', ['typescript']);
 
 };
