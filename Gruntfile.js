@@ -3,6 +3,15 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
 
+    concurrent: {
+        target: {
+            tasks: ['watch', 'nodemon'],
+            options: {
+              logConcurrentOutput: true
+            }
+        }
+    },
+
     typescript: {
       base: {
         src: ['src/*.ts'],
@@ -10,15 +19,17 @@ module.exports = function(grunt) {
         options: {
           module: 'amd',
           target: 'es5',
-          sourceMap: true,
-          declaration: true
+          sourceMap: false,
+          declaration: false,
+          references: ["bower_components/phaser/typescript/*.comments.d.ts",
+            "bower_components/phaser/typescript/p2.d.ts"]
         }
       }
     },
 
     watch: {
-      files: ['src/*.ts'],
-      tasks: ['typescript', 'nodemon'],
+      files: ['Gruntfile.js','src/*.ts'],
+      tasks: ['typescript'],
       options: {
         spawn: true
       }
@@ -27,6 +38,9 @@ module.exports = function(grunt) {
     nodemon: {
       dev: {
         script: 'bin/www'
+      },
+      options: {
+        watch: ['public/gameRes/scripts/**/*.js']
       }
     }
   });
@@ -34,8 +48,9 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-typescript');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-nodemon');
+  grunt.loadNpmTasks('grunt-concurrent');
 
-  grunt.registerTask('default', ['typescript', 'nodemon']);
-  grunt.registerTask('compile', ['typescript', 'nodemon']);
+  grunt.registerTask('default', ['concurrent:target']);
+  grunt.registerTask('compile', ['typescript', 'watch', 'nodemon']);
 
 };
