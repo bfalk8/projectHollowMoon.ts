@@ -1,3 +1,4 @@
+//required to avoid conflicts with atom typescript package
 {
     "compileOnSave": false,
     "filesGlob": [
