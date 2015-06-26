@@ -1,0 +1,16 @@
+{
+    "compileOnSave": false,
+    "filesGlob": [
+        "./**/*.ts",
+        "!./node_modules/**/*.ts"
+    ],
+    "compilerOptions": {},
+    "files": [
+        "./bower_components/phaser/typescript/p2.d.ts",
+        "./bower_components/phaser/typescript/phaser.comments.d.ts",
+        "./bower_components/phaser/typescript/phaser.d.ts",
+        "./bower_components/phaser/typescript/pixi.comments.d.ts",
+        "./bower_components/phaser/typescript/pixi.d.ts",
+        "./src/game.ts"
+    ]
+}
