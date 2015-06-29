@@ -21,7 +21,11 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+//Allows access to bower packages in the browser
 app.use('/bower', express.static('bower_components'));
+//Allows easy access to game assets from frontend
+//app.use('/assets', express.static('./public/gameRes'));
+//TODO this needs to go away upon deployment to public server
 app.use('/src', express.static('src'));
 
 app.use('/', routes);
