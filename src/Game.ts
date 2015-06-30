@@ -1,4 +1,4 @@
-module Castlevania {
+module HollowMoon {
     export class Game extends Phaser.Game {
         constructor() {
             super(800, 600, Phaser.AUTO, '');
@@ -10,7 +10,13 @@ module Castlevania {
         }
     }
 }
+window.addEventListener("keydown", function(e) {
+    // space and arrow keys
+    if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+        e.preventDefault();
+    }
+}, false);
 
 window.onload = () => {
-    new Castlevania.Game();
+    new HollowMoon.Game();
 };
