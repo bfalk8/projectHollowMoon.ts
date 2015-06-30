@@ -1,7 +1,7 @@
-module Castlevania {
+module HollowMoon {
     export class Boot extends Phaser.State {
         preload() {
-            this.load.image('preloadBar' , 'gameRes/loader.png');
+            this.load.image('preloadBar' , 'gameRes/sprites/loader.png');
         }
 
         create() {

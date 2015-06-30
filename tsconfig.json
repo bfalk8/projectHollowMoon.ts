@@ -6,17 +6,16 @@
     ],
     "compilerOptions": {},
     "files": [
-        "./bower_components/phaser/typescript/*.comments.d.ts",
         "./bower_components/phaser/typescript/p2.d.ts",
         "./bower_components/phaser/typescript/phaser.comments.d.ts",
         "./bower_components/phaser/typescript/phaser.d.ts",
         "./bower_components/phaser/typescript/pixi.comments.d.ts",
         "./bower_components/phaser/typescript/pixi.d.ts",
+        "./src/Boot.ts",
+        "./src/Game.ts",
         "./src/Level1.ts",
         "./src/MainMenu.ts",
         "./src/Player.ts",
-        "./src/boot.ts",
-        "./src/game.ts",
-        "./src/preloader.ts"
+        "./src/Preloader.ts"
     ]
 }
