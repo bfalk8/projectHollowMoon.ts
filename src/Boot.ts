@@ -9,8 +9,10 @@ module HollowMoon {
             this.stage.disableVisibilityChange = true;
 
             if (this.game.device.desktop) {
+                // desktop settings
                 this.scale.pageAlignHorizontally = true;
                 this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+                this.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
             } else {
                 // mobile settings
                 this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;

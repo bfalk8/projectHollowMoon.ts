@@ -18,8 +18,10 @@ var HollowMoon;
             this.input.maxPointers = 1;
             this.stage.disableVisibilityChange = true;
             if (this.game.device.desktop) {
+                // desktop settings
                 this.scale.pageAlignHorizontally = true;
                 this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+                this.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
             }
             else {
                 // mobile settings
@@ -50,6 +52,10 @@ var HollowMoon;
             this.state.add('Level1', HollowMoon.Level1, false);
             this.state.start('Boot');
         }
+        Game.prototype.create = function () {
+            this.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
+            console.log("does this even run?");
+        };
         return Game;
     })(Phaser.Game);
     HollowMoon.Game = Game;
@@ -70,6 +76,12 @@ var HollowMoon;
         function Level1() {
             _super.apply(this, arguments);
         }
+        /**
+         * Used for going into Fullscreen mode.
+         */
+        Level1.prototype.startFull = function () {
+            this.game.scale.startFullScreen();
+        };
         Level1.prototype.create = function () {
             // this.physics.startSystem(Phaser.Physics.ARCADE);
             // this.background = this.add.sprite(0, 0, 'level1');
@@ -90,6 +102,8 @@ var HollowMoon;
             this.layer1.resizeWorld();
             this.player = new HollowMoon.Player(this.game, 0, 0);
             this.game.camera.follow(this.player);
+            //creates tap eventListener and calls starFull() when triggered
+            this.game.input.onTap.add(this.startFull, this.game.scale);
         };
         Level1.prototype.update = function () {
             this.game.physics.arcade.collide(this.player, this.layer3);

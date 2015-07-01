@@ -7,6 +7,12 @@ module HollowMoon {
             this.state.add('MainMenu', MainMenu, false);
             this.state.add('Level1', Level1, false);
             this.state.start('Boot');
+
+        }
+
+        create() {
+            this.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
+            console.log("does this even run?");
         }
     }
 }

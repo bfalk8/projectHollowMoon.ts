@@ -8,6 +8,13 @@ module HollowMoon {
         layer1: Phaser.TilemapLayer;
         layer2: Phaser.TilemapLayer;
         layer3: Phaser.TilemapLayer;
+
+        /**
+         * Used for going into Fullscreen mode.
+         */
+        startFull() {
+          this.game.scale.startFullScreen();
+        }
         create() {
             // this.physics.startSystem(Phaser.Physics.ARCADE);
             // this.background = this.add.sprite(0, 0, 'level1');
@@ -29,7 +36,8 @@ module HollowMoon {
             this.layer1.resizeWorld();
             this.player = new Player(this.game, 0, 0);
             this.game.camera.follow(this.player);
-
+            //creates tap eventListener and calls starFull() when triggered
+            this.game.input.onTap.add(this.startFull, this.game.scale);
         }
 
         update() {

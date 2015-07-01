@@ -14,6 +14,7 @@ module HollowMoon {
       update() {
 
         this.body.velocity.x = 0;
+
         if (this.game.input.keyboard.isDown(Phaser.Keyboard.LEFT)) {
             this.body.velocity.x = -150;
             // if(this.body.onFloor()) {
