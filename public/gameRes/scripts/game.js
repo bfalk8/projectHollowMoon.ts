@@ -20,6 +20,7 @@ var HollowMoon;
             if (this.game.device.desktop) {
                 // desktop settings
                 this.scale.pageAlignHorizontally = true;
+                this.scale.pageAlignVertically = true;
                 this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
                 this.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
             }
@@ -34,7 +35,10 @@ var HollowMoon;
                 this.scale.pageAlignHorizontally = true;
                 this.scale.refresh();
             }
+            this.setKeyCapture();
             this.game.state.start('Preloader', true, false);
+        };
+        Boot.prototype.setKeyCapture = function () {
         };
         return Boot;
     })(Phaser.State);
@@ -45,17 +49,13 @@ var HollowMoon;
     var Game = (function (_super) {
         __extends(Game, _super);
         function Game() {
-            _super.call(this, 800, 600, Phaser.AUTO, '');
+            _super.call(this, 1024, 576, Phaser.CANVAS, '');
             this.state.add('Boot', HollowMoon.Boot, false);
             this.state.add('Preloader', HollowMoon.Preloader, false);
             this.state.add('MainMenu', HollowMoon.MainMenu, false);
-            this.state.add('Level1', HollowMoon.Level1, false);
+            this.state.add('GameWorld', HollowMoon.GameWorld, false);
             this.state.start('Boot');
         }
-        Game.prototype.create = function () {
-            this.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
-            console.log("does this even run?");
-        };
         return Game;
     })(Phaser.Game);
     HollowMoon.Game = Game;
@@ -71,46 +71,103 @@ window.onload = function () {
 };
 var HollowMoon;
 (function (HollowMoon) {
-    var Level1 = (function (_super) {
-        __extends(Level1, _super);
-        function Level1() {
+    var GameWorld = (function (_super) {
+        __extends(GameWorld, _super);
+        function GameWorld() {
             _super.apply(this, arguments);
         }
-        /**
-         * Used for going into Fullscreen mode.
-         */
-        Level1.prototype.startFull = function () {
-            this.game.scale.startFullScreen();
-        };
-        Level1.prototype.create = function () {
+        /** Called once on load */
+        GameWorld.prototype.create = function () {
             // this.physics.startSystem(Phaser.Physics.ARCADE);
             // this.background = this.add.sprite(0, 0, 'level1');
             // this.music = this.add.audio('music', 1, false);
             // this.music.play();
-            this.physics.startSystem(Phaser.Physics.ARCADE);
+            this.worldGroup = new Phaser.Group(this.game, this.world, 'worldGroup');
+            this.uiGroup = new Phaser.Group(this.game, this.world, 'uiGroup');
+            this.physics.startSystem(Phaser.Physics.P2JS);
+            this.physics.setBoundsToWorld();
             this.stage.backgroundColor = '2f9d8c';
-            this.map = this.game.add.tilemap('tiled');
-            this.map.addTilesetImage('intBG', 'intBG');
-            this.map.addTilesetImage('intPara', 'intPara');
+            this.player = new HollowMoon.Player(this.game, 0, 0);
+            this.worldGroup.add(this.player);
+            this.createMap('tiled2');
+            this.game.camera.follow(this.player);
+            //creates tap eventListener and calls starFull() when triggered. This is only used for testing until a more permanent implementation.
+            this.game.input.onTap.add(this.startFull, this.game.scale);
+        };
+        /** Called every frame, heart of the game loop */
+        GameWorld.prototype.update = function () {
+            //this.game.physics.arcade.collide(this.player, this.layerPlatforms);
+            // if(this.player.x > 70)
+            //   this.createMap('tiled2');
+        };
+        /** Use for debug information, called after update() */
+        GameWorld.prototype.render = function () {
+            this.game.debug.body(this.player);
+            this.game.debug.text(this.game.cache.getJSON('tiledJson').layers[0].name, 10, 20);
+        };
+        /** Used for going into Fullscreen mode.*/
+        GameWorld.prototype.startFull = function () {
+            this.game.scale.startFullScreen();
+        };
+        /** Creates the level from tile map data.*/
+        GameWorld.prototype.createMap = function (mapName) {
+            //destroy the old map
+            if (this.map !== undefined) {
+                this.map.destroy();
+                this.layerBG.destroy();
+                this.layerParallax.destroy();
+                this.layerPlatforms.destroy();
+            }
+            //create the new map
+            this.map = this.game.add.tilemap(mapName);
             this.map.addTilesetImage('extBG', 'extBG');
             this.map.addTilesetImage('extPara', 'extPara');
             this.map.addTilesetImage('platformTiles', 'platformTiles');
-            this.layer1 = this.map.createLayer('background');
-            this.layer2 = this.map.createLayer('parallax');
-            this.layer3 = this.map.createLayer('platforms');
+            this.layerBG = this.map.createLayer('background');
+            this.layerParallax = this.map.createLayer('parallax');
+            this.layerPlatforms = this.map.createLayer('platforms');
+            //add all the tilemap layers to the worldGroup
+            this.worldGroup.addMultiple([this.layerBG, this.layerParallax, this.layerPlatforms, this.player]);
+            this.layerBG.resizeWorld();
+            //set rendering order and sort the group fro proper rendering
+            this.layerBG.z = 0;
+            this.layerParallax.z = 1;
+            this.layerPlatforms.z = 2;
+            this.player.z = 4;
+            this.worldGroup.sort();
+            //collisions
             this.map.setCollisionByExclusion([0], true, 'platforms');
-            this.layer1.resizeWorld();
-            this.player = new HollowMoon.Player(this.game, 0, 0);
-            this.game.camera.follow(this.player);
-            //creates tap eventListener and calls starFull() when triggered
-            this.game.input.onTap.add(this.startFull, this.game.scale);
+            this.physics.p2.convertTilemap(this.map, 'platforms');
+            this.game.physics.p2.restitution = 0.1;
+            this.game.physics.p2.gravity.y = 300;
+            //this.game.physics.p2.enable(this.player);
+            //setup character properly...needs to change when the data is imported from Tiled JSON
+            this.player.position.x = 0;
+            this.player.position.y = 0;
         };
-        Level1.prototype.update = function () {
-            this.game.physics.arcade.collide(this.player, this.layer3);
-        };
-        return Level1;
+        return GameWorld;
     })(Phaser.State);
-    HollowMoon.Level1 = Level1;
+    HollowMoon.GameWorld = GameWorld;
+})(HollowMoon || (HollowMoon = {}));
+var HollowMoon;
+(function (HollowMoon) {
+    /** Assign Default Keybindings here, they can be changed with changeKey func*/
+    HollowMoon.keyBindings = {
+        moveLeft: Phaser.Keyboard.LEFT,
+        moveRight: Phaser.Keyboard.RIGHT,
+        jump: Phaser.Keyboard.UP,
+        crouch: Phaser.Keyboard.DOWN,
+        dodge: Phaser.Keyboard.CONTROL,
+    };
+    /**
+     * Changes key bindings for use withing game.
+     * @param {string} binding - The name of the binding to change
+     * @param {number} key - The Phaser.Keyboard key to set binding to
+     */
+    function changeKey(binding, key) {
+        HollowMoon.keyBindings[binding] = key;
+    }
+    HollowMoon.changeKey = changeKey;
 })(HollowMoon || (HollowMoon = {}));
 var HollowMoon;
 (function (HollowMoon) {
@@ -130,7 +187,7 @@ var HollowMoon;
             // this.add.tween(this.logo).to({ y: 220 }, 2000, Phaser.Easing.Elastic.Out, true, 2000);
             //
             // this.input.onDown.addOnce(this.fadeOut, this);
-            this.add.text(0, 0, "Hollow Moon", '');
+            this.add.text(this.game.canvas.width / 2, this.game.canvas.height / 2, "Hollow Moon", { fill: '#2b918e' });
             this.input.onDown.addOnce(this.startGame, this);
         };
         MainMenu.prototype.fadeOut = function () {
@@ -139,7 +196,7 @@ var HollowMoon;
             // tween.onComplete.add(this.startGame, this);
         };
         MainMenu.prototype.startGame = function () {
-            this.game.state.start('Level1', true, false);
+            this.game.state.start('GameWorld', true, false);
         };
         return MainMenu;
     })(Phaser.State);
@@ -155,29 +212,44 @@ var HollowMoon;
             this.animations.add('walk', [21, 22, 23, 24, 25], 10, true);
             this.animations.add('jump', [9, 10, 11, 12], 10, true);
             game.add.existing(this);
-            game.physics.enable(this);
-            game.physics.arcade.gravity.y = 600;
+            game.physics.p2.enable(this);
+            this.body.fixedRotation = true;
+            this.body.collideWorldBounds = true;
+            console.log(HollowMoon.keyBindings.moveLeft);
+            HollowMoon.keyBindings.moveLeft = 9;
+            console.log(HollowMoon.keyBindings.moveLeft);
+            //  KeyBindings.moveLeft;
         }
         Player.prototype.update = function () {
-            this.body.velocity.x = 0;
+            this.body.setZeroVelocity();
+            /*this.body.velocity.x = 0;
+    
             if (this.game.input.keyboard.isDown(Phaser.Keyboard.LEFT)) {
                 this.body.velocity.x = -150;
                 // if(this.body.onFloor()) {
                 //   this.animations.play('walk');
                 // } else {
-                this.animations.play('jump');
-            }
-            else if (this.game.input.keyboard.isDown(Phaser.Keyboard.RIGHT)) {
+                  this.animations.play('jump');
+                // }
+                // if (this.scale.x === 1) {
+                //     this.scale.x = -1;
+                // }
+            } else if (this.game.input.keyboard.isDown(Phaser.Keyboard.RIGHT)) {
                 this.body.velocity.x = 150;
                 // if(this.body.onFloor()) {
-                this.animations.play('walk');
-            }
-            else {
+                  this.animations.play('walk');
+                // } else {
+                //   this.animations.play('jump');
+                // }
+                // if (this.scale.x === -1) {
+                //     this.scale.x = 1;
+                // }
+            } else {
                 this.animations.frame = 0;
             }
-            if (this.game.input.keyboard.isDown(Phaser.Keyboard.UP) && this.body.onFloor()) {
-                this.body.velocity.y = -300;
-            }
+            if(this.game.input.keyboard.isDown(Phaser.Keyboard.UP)  && this.body.onFloor()) {
+              this.body.velocity.y = -300;
+            }*/
         };
         return Player;
     })(Phaser.Sprite);
@@ -199,11 +271,11 @@ var HollowMoon;
             this.load.spritesheet('elisa', 'gameRes/sprites/elisa.png', 56, 56);
             // this.load.image('level1', 'gameRes/level1.png');
             this.load.tilemap('tiled', 'gameRes/tilemaps/test.json', null, Phaser.Tilemap.TILED_JSON);
+            this.load.tilemap('tiled2', 'gameRes/tilemaps/test2.json', null, Phaser.Tilemap.TILED_JSON);
             this.load.image('extBG', 'gameRes/tilemaps/extBG.png');
             this.load.image('extPara', 'gameRes/tilemaps/extPara.png');
-            this.load.image('intBG', 'gameRes/tilemaps/intBG.png');
-            this.load.image('intPara', 'gameRes/tilemaps/intPara.png');
             this.load.image('platformTiles', 'gameRes/tilemaps/platformTiles.png');
+            this.load.json('tiledJson', 'gameRes/tilemaps/test2.json');
         };
         Preloader.prototype.create = function () {
             var tween = this.add.tween(this.preloadBar).to({ alpha: 0 }, 1000, Phaser.Easing.Linear.None, true);

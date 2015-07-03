@@ -15,7 +15,7 @@ module HollowMoon {
             // this.add.tween(this.logo).to({ y: 220 }, 2000, Phaser.Easing.Elastic.Out, true, 2000);
             //
             // this.input.onDown.addOnce(this.fadeOut, this);
-            this.add.text(0,0,"Hollow Moon", '');
+            this.add.text(this.game.canvas.width/2, this.game.canvas.height/2,"Hollow Moon", {fill:'#2b918e'});
             this.input.onDown.addOnce(this.startGame, this);
         }
 
@@ -26,7 +26,7 @@ module HollowMoon {
         }
 
         startGame() {
-            this.game.state.start('Level1', true, false);
+            this.game.state.start('GameWorld', true, false);
         }
     }
 }

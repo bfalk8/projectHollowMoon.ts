@@ -6,14 +6,21 @@ module HollowMoon {
         this.animations.add('walk', [21, 22, 23, 24, 25], 10, true);
         this.animations.add('jump', [9, 10, 11, 12], 10, true);
         game.add.existing(this);
-        game.physics.enable(this);
-        game.physics.arcade.gravity.y = 600;
+        game.physics.p2.enable(this);
+        this.body.fixedRotation = true;
+        this.body.collideWorldBounds = true;
+        console.log(HollowMoon.keyBindings.moveLeft);
+        HollowMoon.keyBindings.moveLeft = 9;
+        console.log(HollowMoon.keyBindings.moveLeft);
+      //  KeyBindings.moveLeft;
       }
 
 
       update() {
+        this.body.setZeroVelocity();
 
-        this.body.velocity.x = 0;
+
+        /*this.body.velocity.x = 0;
 
         if (this.game.input.keyboard.isDown(Phaser.Keyboard.LEFT)) {
             this.body.velocity.x = -150;
@@ -40,7 +47,7 @@ module HollowMoon {
         }
         if(this.game.input.keyboard.isDown(Phaser.Keyboard.UP)  && this.body.onFloor()) {
           this.body.velocity.y = -300;
-        }
+        }*/
       }
     }
 }

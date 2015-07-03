@@ -13,7 +13,8 @@
         "./bower_components/phaser/typescript/pixi.d.ts",
         "./src/Boot.ts",
         "./src/Game.ts",
-        "./src/Level1.ts",
+        "./src/GameWorld.ts",
+        "./src/KeyBindings.ts",
         "./src/MainMenu.ts",
         "./src/Player.ts",
         "./src/Preloader.ts"
