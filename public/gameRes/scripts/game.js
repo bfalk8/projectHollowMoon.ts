@@ -13,6 +13,11 @@ var HollowMoon;
         }
         Boot.prototype.preload = function () {
             this.load.image('preloadBar', 'gameRes/sprites/loader.png');
+            //load all tilemap json files
+            var tilePath = 'gameRes/tilemaps/';
+            for (var map in HollowMoon.MapList) {
+                this.load.json(map + 'J', tilePath + HollowMoon.MapList[map]);
+            }
         };
         Boot.prototype.create = function () {
             this.input.maxPointers = 1;
@@ -88,22 +93,36 @@ var HollowMoon;
             this.physics.setBoundsToWorld();
             this.stage.backgroundColor = '2f9d8c';
             this.player = new HollowMoon.Player(this.game, 0, 0);
+            this.player.name = 'player';
             this.worldGroup.add(this.player);
-            this.createMap('tiled2');
+            this.createMap('mapStart');
+            /*this.p2PlayerGroup = this.game.physics.p2.createCollisionGroup();
+            this.p2ZoneGroup = this.game.physics.p2.createCollisionGroup();
+            this.player.body.setCollisionGroup(this.p2PlayerGroup);
+            this.player.body.collides(this.p2ZoneGroup, this.checkCollision, this);*/
             this.game.camera.follow(this.player);
             //creates tap eventListener and calls starFull() when triggered. This is only used for testing until a more permanent implementation.
             this.game.input.onTap.add(this.startFull, this.game.scale);
+            this.game.time.advancedTiming = true;
+            //this.game.physics.p2.setPostBroadphaseCallback(this.checkCollision, this);
         };
         /** Called every frame, heart of the game loop */
         GameWorld.prototype.update = function () {
             //this.game.physics.arcade.collide(this.player, this.layerPlatforms);
             // if(this.player.x > 70)
             //   this.createMap('tiled2');
+            if (this.game.input.keyboard.isDown(Phaser.Keyboard.F)) {
+                this.game.time.fpsMin = 60;
+            }
         };
         /** Use for debug information, called after update() */
         GameWorld.prototype.render = function () {
             this.game.debug.body(this.player);
-            this.game.debug.text(this.game.cache.getJSON('tiledJson').layers[0].name, 10, 20);
+            //this.game.debug.text(this.game.cache.getJSON('tiledJson').layers[0].name, 10, 20);
+            this.game.debug.text('current: ' + this.game.time.fps.toString(), 10, 20);
+            this.game.debug.text('min: ' + this.game.time.fpsMin.toString(), 10, 40);
+            this.game.debug.text('x: ' + this.player.position.x.toString(), 10, 60);
+            this.game.debug.text('y: ' + this.player.position.y.toString(), 10, 80);
         };
         /** Used for going into Fullscreen mode.*/
         GameWorld.prototype.startFull = function () {
@@ -115,24 +134,28 @@ var HollowMoon;
             if (this.map !== undefined) {
                 this.map.destroy();
                 this.layerBG.destroy();
-                this.layerParallax.destroy();
                 this.layerPlatforms.destroy();
             }
             //create the new map
+            var tilePath = 'gameRes/tilemaps/';
+            var jsonFile = this.cache.getJSON(mapName + 'J');
+            //this.load.tilemap(mapName, '', jsonFile, Phaser.Tilemap.TILED_JSON);
             this.map = this.game.add.tilemap(mapName);
-            this.map.addTilesetImage('extBG', 'extBG');
-            this.map.addTilesetImage('extPara', 'extPara');
-            this.map.addTilesetImage('platformTiles', 'platformTiles');
+            /*var bgPath:string = tilePath + jsonFile.tilesets[0].image;*/
+            /*var platformPath:string = tilePath + jsonFile.tilesets[1].image;*/
+            /*this.load.image(mapName + 'BG', bgPath);*/
+            /*console.log(bgPath);*/
+            /*this.load.image(mapName + 'Platforms', platformPath);*/
+            this.map.addTilesetImage('bg', mapName + 'BG');
+            this.map.addTilesetImage('platformTiles', mapName + 'Platforms');
             this.layerBG = this.map.createLayer('background');
-            this.layerParallax = this.map.createLayer('parallax');
             this.layerPlatforms = this.map.createLayer('platforms');
             //add all the tilemap layers to the worldGroup
-            this.worldGroup.addMultiple([this.layerBG, this.layerParallax, this.layerPlatforms, this.player]);
-            this.layerBG.resizeWorld();
+            this.worldGroup.addMultiple([this.layerBG, this.layerPlatforms, this.player]);
+            this.layerPlatforms.resizeWorld();
             //set rendering order and sort the group fro proper rendering
             this.layerBG.z = 0;
-            this.layerParallax.z = 1;
-            this.layerPlatforms.z = 2;
+            this.layerPlatforms.z = 1;
             this.player.z = 4;
             this.worldGroup.sort();
             //collisions
@@ -142,8 +165,37 @@ var HollowMoon;
             this.game.physics.p2.gravity.y = 300;
             //this.game.physics.p2.enable(this.player);
             //setup character properly...needs to change when the data is imported from Tiled JSON
-            this.player.position.x = 0;
-            this.player.position.y = 0;
+            var playerPos = jsonFile.layers[2].objects.filter(function (playerPos) {
+                return playerPos.type === 'playerSpawn';
+            })[0];
+            this.player.position.x = playerPos.x;
+            this.player.position.y = playerPos.y;
+            //zone init
+            var zoneSpot = jsonFile.layers[2].objects.filter(function (zoneSpot) {
+                return zoneSpot.type === 'zoneEdge';
+            })[0];
+            this.zones = this.game.make.sprite(zoneSpot.x, zoneSpot.y, 'elisa', 1);
+            this.world.add(this.zones);
+            this.game.physics.p2.enable(this.zones);
+            this.zones.body.onBeginContact.add(this.checkCollision, this);
+            /*var blah = this.physics.p2.createBody(zoneSpot.x, zoneSpot.y, 0);
+            blah.setCollisionGroup(this.p2ZoneGroup);
+            blah.addRectangle(100,100);*/
+            console.log(zoneSpot);
+            /*this.map.addTilesetImage('extBG', 'extBG');
+            this.map.addTilesetImage('extPara', 'extPara');
+            this.map.addTilesetImage('platformTiles', 'platformTiles');*/
+            //should be tile sprite of smaller image...
+            //var blah = this.add.image(0,0,'test2BG', this.worldGroup);
+            //this.layerBG = this.map.createLayer('background');
+            //this.layerParallax = this.map.createLayer('parallax');
+            /*var tileBG = this.add.tileSprite(0,0,this.world.width, this.world.height, 'extBG');
+            var tilePara = this.add.tileSprite(0,0,this.world.width, this.world.height, 'extPara');*/
+        };
+        GameWorld.prototype.checkCollision = function (body1, body2, body3, body4) {
+            if (body1.sprite !== null && body1.sprite.name === 'player') {
+                this.createMap('mapSecond');
+            }
         };
         return GameWorld;
     })(Phaser.State);
@@ -152,7 +204,7 @@ var HollowMoon;
 var HollowMoon;
 (function (HollowMoon) {
     /** Assign Default Keybindings here, they can be changed with changeKey func*/
-    HollowMoon.keyBindings = {
+    HollowMoon.KeyBindings = {
         moveLeft: Phaser.Keyboard.LEFT,
         moveRight: Phaser.Keyboard.RIGHT,
         jump: Phaser.Keyboard.UP,
@@ -165,7 +217,7 @@ var HollowMoon;
      * @param {number} key - The Phaser.Keyboard key to set binding to
      */
     function changeKey(binding, key) {
-        HollowMoon.keyBindings[binding] = key;
+        HollowMoon.KeyBindings[binding] = key;
     }
     HollowMoon.changeKey = changeKey;
 })(HollowMoon || (HollowMoon = {}));
@@ -204,6 +256,13 @@ var HollowMoon;
 })(HollowMoon || (HollowMoon = {}));
 var HollowMoon;
 (function (HollowMoon) {
+    HollowMoon.MapList = {
+        mapStart: 'mapStart.json',
+        mapSecond: 'mapSecond.json'
+    };
+})(HollowMoon || (HollowMoon = {}));
+var HollowMoon;
+(function (HollowMoon) {
     var Player = (function (_super) {
         __extends(Player, _super);
         function Player(game, x, y) {
@@ -215,13 +274,30 @@ var HollowMoon;
             game.physics.p2.enable(this);
             this.body.fixedRotation = true;
             this.body.collideWorldBounds = true;
-            console.log(HollowMoon.keyBindings.moveLeft);
-            HollowMoon.keyBindings.moveLeft = 9;
-            console.log(HollowMoon.keyBindings.moveLeft);
-            //  KeyBindings.moveLeft;
+            //set Player parameters
+            this.walkSpeed = 150;
+            this.jumpSpeed = 350;
+            this.isGrounded = false;
+            this.body.onBeginContact.add(function () { this.isGrouned = true; }, this);
+            this.body.onEndContact.add(function () { this.isGrouned = false; }, this);
         }
         Player.prototype.update = function () {
-            this.body.setZeroVelocity();
+            this.body.velocity.x = 0;
+            if (this.game.input.keyboard.isDown(HollowMoon.KeyBindings.moveRight)) {
+                this.body.moveRight(this.walkSpeed);
+                this.animations.play('walk');
+            }
+            else if (this.game.input.keyboard.isDown(HollowMoon.KeyBindings.moveLeft)) {
+                this.body.moveLeft(this.walkSpeed);
+                this.animations.play('jump');
+            }
+            else {
+                this.animations.frame = 0;
+            }
+            if (this.game.input.keyboard.isDown(HollowMoon.KeyBindings.jump)) {
+                this.body.velocity.y = -this.jumpSpeed;
+                console.log('woah');
+            }
             /*this.body.velocity.x = 0;
     
             if (this.game.input.keyboard.isDown(Phaser.Keyboard.LEFT)) {
@@ -251,6 +327,11 @@ var HollowMoon;
               this.body.velocity.y = -300;
             }*/
         };
+        Player.prototype.checkFloor = function () {
+            var result = false;
+            this.body.on;
+            return result;
+        };
         return Player;
     })(Phaser.Sprite);
     HollowMoon.Player = Player;
@@ -269,13 +350,24 @@ var HollowMoon;
             // this.load.image('logo', 'gameRes/logo.png');
             // this.load.audio('music', 'gameRes/title.mp3', true);
             this.load.spritesheet('elisa', 'gameRes/sprites/elisa.png', 56, 56);
-            // this.load.image('level1', 'gameRes/level1.png');
-            this.load.tilemap('tiled', 'gameRes/tilemaps/test.json', null, Phaser.Tilemap.TILED_JSON);
-            this.load.tilemap('tiled2', 'gameRes/tilemaps/test2.json', null, Phaser.Tilemap.TILED_JSON);
-            this.load.image('extBG', 'gameRes/tilemaps/extBG.png');
+            //this.load.tilemap('mapStart', 'gameRes/tilemaps/mapStart.json', null, Phaser.Tilemap.TILED_JSON);
+            //this.load.tilemap('mapSecond', 'gameRes/tilemaps/mapSecond.json', null, Phaser.Tilemap.TILED_JSON);
+            /*this.load.image('extBG', 'gameRes/tilemaps/extBG.png');
             this.load.image('extPara', 'gameRes/tilemaps/extPara.png');
-            this.load.image('platformTiles', 'gameRes/tilemaps/platformTiles.png');
-            this.load.json('tiledJson', 'gameRes/tilemaps/test2.json');
+            this.load.image('platformTiles', 'gameRes/tilemaps/platformTiles.png');*/
+            /*this.load.json('mapStartJ', 'gameRes/tilemaps/mapStart.json');
+            this.load.json('mapSecondJ', 'gameRes/tilemaps/mapSecond.json');*/
+            //this.load.image('test2BG', 'gameRes/tilemaps/test2.png');
+            //Load all the data required for TileMaps
+            for (var map in HollowMoon.MapList) {
+                var jsonFile = this.cache.getJSON(map + 'J');
+                var tilePath = 'gameRes/tilemaps/';
+                this.load.tilemap(map, '', jsonFile, Phaser.Tilemap.TILED_JSON);
+                var bgPath = tilePath + jsonFile.tilesets[0].image;
+                var platformPath = tilePath + jsonFile.tilesets[1].image;
+                this.load.image(map + 'BG', bgPath);
+                this.load.image(map + 'Platforms', platformPath);
+            }
         };
         Preloader.prototype.create = function () {
             var tween = this.add.tween(this.preloadBar).to({ alpha: 0 }, 1000, Phaser.Easing.Linear.None, true);

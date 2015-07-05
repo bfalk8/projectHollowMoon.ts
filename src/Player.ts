@@ -1,5 +1,9 @@
 module HollowMoon {
     export class Player extends Phaser.Sprite {
+      walkSpeed: number;
+      jumpSpeed: number;
+      isGrounded: boolean;
+
       constructor(game: Phaser.Game, x: number, y: number) {
         super(game, x, y, 'elisa', 0);
         this.anchor.setTo(0.5);
@@ -9,15 +13,30 @@ module HollowMoon {
         game.physics.p2.enable(this);
         this.body.fixedRotation = true;
         this.body.collideWorldBounds = true;
-        console.log(HollowMoon.keyBindings.moveLeft);
-        HollowMoon.keyBindings.moveLeft = 9;
-        console.log(HollowMoon.keyBindings.moveLeft);
-      //  KeyBindings.moveLeft;
+        //set Player parameters
+        this.walkSpeed = 150;
+        this.jumpSpeed = 350;
+        this.isGrounded = false;
+        this.body.onBeginContact.add(function(){this.isGrouned = true;}, this);
+        this.body.onEndContact.add(function(){this.isGrouned = false;}, this);
       }
 
-
       update() {
-        this.body.setZeroVelocity();
+        this.body.velocity.x = 0;
+
+        if(this.game.input.keyboard.isDown(KeyBindings.moveRight)) {
+          this.body.moveRight(this.walkSpeed);
+          this.animations.play('walk');
+        } else if (this.game.input.keyboard.isDown(KeyBindings.moveLeft)) {
+          this.body.moveLeft(this.walkSpeed);
+          this.animations.play('jump');
+        } else {
+          this.animations.frame = 0;
+        }
+        if(this.game.input.keyboard.isDown(KeyBindings.jump)) {
+          this.body.velocity.y = -this.jumpSpeed;
+          console.log('woah');
+        }
 
 
         /*this.body.velocity.x = 0;
@@ -48,6 +67,12 @@ module HollowMoon {
         if(this.game.input.keyboard.isDown(Phaser.Keyboard.UP)  && this.body.onFloor()) {
           this.body.velocity.y = -300;
         }*/
+      }
+
+      checkFloor(): boolean {
+        var result = false;
+        this.body.on
+        return result;
       }
     }
 }

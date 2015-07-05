@@ -16,6 +16,7 @@
         "./src/GameWorld.ts",
         "./src/KeyBindings.ts",
         "./src/MainMenu.ts",
+        "./src/MapData.ts",
         "./src/Player.ts",
         "./src/Preloader.ts"
     ]

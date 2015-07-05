@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="50" height="20" tilewidth="32" tileheight="32" nextobjectid="10">
+ <tileset firstgid="1" name="bg" tilewidth="32" tileheight="32" tilecount="897">
+  <image source="../../public/gameRes/tilemaps/tilesets/scifi_platform_BG1.jpg" width="1279" height="742"/>
+ </tileset>
+ <tileset firstgid="898" name="platformTiles" tilewidth="32" tileheight="32" tilecount="805">
+  <image source="../../public/gameRes/tilemaps/tilesets/scifi_platformTiles_32x32.png" width="1120" height="736"/>
+ </tileset>
+ <layer name="background" width="50" height="20">
+  <data encoding="base64" compression="zlib">
+   eJyV18PaHgYQgNH8MRvbjW1bjRo1tm3bdtq4cdo0tm2jjW3bVk8u4Vuc3Sze1TwzQcGCBQtOCEISitCEISzhCE8EIhKJn4hMFKISjejEICaxiE0c4hKP+CQgIYlITBKS8jPJSE4KUpKKoADaUpOGtKQjPRnISCYyk4WsZCM7OchJLnKTh7zkIz8FKEghClOEohSjOCX4hZKUojRlKMuvlKN8gG0VqEglfqMyVahKNapTg5rUojZ1qEs96tOAhjSiMU1oSjOa04KWtKI1bWhLO9rTgY50ojNd6BpgWze604Oe9KI3fehLP/ozgIEMYjBDGMowhjOCkYxiNGMYyzjGM4Hf+YOJTGIyU5jKNKbzJzOYGWDbLGYzh7nMYz5/8TcL+IeFLGIxS1jKMpazgpWsYjVrWMs61rOBjWxiM1vYyja2s4Od7GI3e9gbYNs+9nOAgxziMEc4yjGOc4J/+Y+TnOI0ZzjLOc5zgYtc4jJXuMo1rnODm9ziNne4yz3u84CHPAqw7TFPeMoznvOCl7ziNW94yzve84GPfOIzX/jKN77zY9EEEZwQhCQUoQlDWMIRnghEJBI/EZkoRA0KrC2a+ejEICaxiE0c4hKP+CQgIYlITBKS8jPJSE4KUpKK1KQhLelITwYykonMZCEr2chODnKSi9xBgbXlIS/5yE8BClKIwhShKMUoTgl+oSSlKE0ZyvIr5ShPBSpSid+oTBWqUo3q1KAmtahNHepSj/oBtjWgIY1oTBOa0ozmtKAlrWhNG9rSjvZ0oCOd6EwXutKN7vSgJ73oTR/60o/+DGAggxjMEIYyLMC24YxgJKMYzRjGMo7xTOB3/mAik5jMFKYyjen8yQxmMovZzGEu85jPX/zNAv5hIYtYzBKWsozlAbatYCWrWM0a1rKO9WxgI5vYzBa2so3t7GAnu9jNHvayj/0c4CCHOMwRjnKM45zgX/7jJKc4zZkA285yjvNc4CKXuMwVrnKN69zgJre4zR3uco/7POAhj3jME57yjOe84CWveM0b3vKO93zgI5/4HGDbF77yje/8OMyCCE4IQhKK0IQhLOEITwQiEomfiEwUohKN6MQgJrGITRziEo/4JCAhiUhMEpLyc/DA2pKRnBSkJBWpSUNa0pGeDGQkE5nJQlaykZ0c5CQXuclDXvKRnwIUpBCFKUJRilGcEvxCSUpROsC2MpTlV8pRngpUpBK/UZkqVKUa1alBTWpRmzrUpR71aUBDGtGYJjSlGc1pQUta0Zo2tKUd7ekQYFtHOtGZLnSlG93pQU960Zs+9KUf/RnAQAYxmCEMZRjDGcFIRjGaMYxlHOOZwO/8wUQmMZkpTA2wbRrT+ZMZzGQWs5nDXOYxn7/4mwX8w0IWsZglLGUZy1nBSlaxmjWsZR3r2cBGNrGZLWxlG9vZEWDbTnaxmz3sZR/7OcBBDnGYIxzlGMc5wb/8x0lOcZoznOUc57nARS5xmStc5RrXucFNbnGbO9wNsO0e93nAQx7xmCc85RnPecFLXvGaN7zlHe/5wEc+8ZkvfOUb3/nxnAYRnBCEJBShCUNYwhGeCEQMEVjb/2/h7ms=
+  </data>
+ </layer>
+ <layer name="platforms" width="50" height="20">
+  <data encoding="base64" compression="zlib">
+   eJztz7EJADAIRFGLq5NZErL/bHEBwdKD/0Cu/UYAAAAAcPbUv6kmt3U5/rCyeateFydbr+p18QFBUAUZ
+  </data>
+ </layer>
+ <objectgroup name="zones">
+  <object id="1" name="mapStart" type="zoneEdge" x="544" y="384" width="32" height="96"/>
+  <object id="8" type="playerSpawn" x="33" y="513"/>
+  <object id="9" name="mapStart" type="zoneDoor" x="224" y="416" width="32" height="64"/>
+ </objectgroup>
+</map>

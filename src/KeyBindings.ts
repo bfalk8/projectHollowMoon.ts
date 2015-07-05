@@ -1,7 +1,7 @@
 module HollowMoon {
 
   /** Assign Default Keybindings here, they can be changed with changeKey func*/
-  export var keyBindings = {
+  export var KeyBindings = {
     moveLeft: Phaser.Keyboard.LEFT,
     moveRight: Phaser.Keyboard.RIGHT,
     jump: Phaser.Keyboard.UP,
@@ -15,6 +15,7 @@ module HollowMoon {
    * @param {number} key - The Phaser.Keyboard key to set binding to
    */
   export function changeKey(binding:string, key:number) {
-    keyBindings[binding] = key;
+    KeyBindings[binding] = key;
   }
+  
 }
