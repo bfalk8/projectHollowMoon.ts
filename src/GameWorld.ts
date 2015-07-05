@@ -8,7 +8,7 @@ module HollowMoon {
         layerBG: Phaser.TilemapLayer;
         layerParallax: Phaser.TilemapLayer;
         layerPlatforms: Phaser.TilemapLayer;
-        zones: Phaser.Sprite;
+        zoneEdges: Phaser.Rectangle[];
         p2PlayerGroup: Phaser.Physics.P2.CollisionGroup;
         p2PlatformGroup: Phaser.Physics.P2.CollisionGroup;
         p2ZoneGroup: Phaser.Physics.P2.CollisionGroup;
@@ -36,6 +36,7 @@ module HollowMoon {
           if(this.game.input.keyboard.isDown(Phaser.Keyboard.F)) {
             this.game.time.fpsMin = 60;
           }
+          this.checkZoneEdges();
         }
 
         /** Use for debug information, called after update() */
@@ -61,7 +62,6 @@ module HollowMoon {
             this.map.destroy();
             this.layerBG.destroy();
             this.layerPlatforms.destroy();
-            this.zones.destroy();
             /*this.player.kill();*/
             this.player.destroy();
           }
@@ -97,7 +97,8 @@ module HollowMoon {
           //collisions
           this.map.setCollisionByExclusion([0], true, 'platforms');
           this.physics.p2.convertTilemap(this.map, 'platforms');
-          this.game.physics.p2.restitution = 0.1;
+          this.game.physics.p2.restitution = 0;
+          this.game.physics.p2.friction = 1;
           this.game.physics.p2.gravity.y = 300;
 
           //setup character properly...needs to change when the data is imported from Tiled JSON
@@ -109,19 +110,29 @@ module HollowMoon {
           //this.game.physics.p2.enable(this.player);
 
           //zone init
-          var zoneSpot = jsonFile.layers[2].objects.filter(function ( zoneSpot ) {
-            return zoneSpot.type === 'zoneEdge';
-            })[0];
-          this.zones = this.game.make.sprite(zoneSpot.x, zoneSpot.y, 'elisa', 1);
-          this.world.add(this.zones);
-          this.game.physics.p2.enable(this.zones);
-          this.zones.body.onBeginContact.add(this.checkCollision, this);
+          var zoneEdges = jsonFile.layers[2].objects.filter(function ( element ) {
+            return element.type === 'zoneEdge';
+          });
+          this.zoneEdges = [];
+          console.log(zoneEdges);
+          for(var zone in zoneEdges){
+            console.log(zoneEdges[zone]);
+            var currZone = zoneEdges[zone];
+            this.zoneEdges.push(new Phaser.Rectangle(currZone.x, currZone.y, currZone.width, currZone.height));
+          }
+          console.log(this.player.body.data);
+          /*this.zones = this.game.make.sprite(zoneSpot.x, zoneSpot.y, 'elisa', 1);*/
+          /*this.world.add(this.zones);*/
+          /*this.game.physics.p2.enable(this.zones);*/
+          /*this.zones.body.onBeginContact.add(this.checkCollision, this);*/
         }
 
-        checkCollision(body1, body2, body3, body4) {
-          console.log('owwwwwwwwwwww!!');
-          if(body1.sprite !== null && body1.sprite.name === 'player'){
-            this.createMap('mapSecond');
+        checkZoneEdges() {
+          var playerCheck = new Phaser.Rectangle(this.player.x, this.player.y, this.player.width, this.player.height);
+          for(var zone in this.zoneEdges) {
+            if(Phaser.Rectangle.intersects(playerCheck, this.zoneEdges[zone])) {
+              this.createMap('mapSecond');
+            }
           }
         }
 
