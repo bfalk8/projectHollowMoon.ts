@@ -3,6 +3,7 @@ module HollowMoon {
       walkSpeed: number;
       jumpSpeed: number;
       isGrounded: boolean;
+      p2World: Phaser.Physics.P2;
 
       constructor(game: Phaser.Game, x: number, y: number) {
         super(game, x, y, 'elisa', 0);
@@ -10,15 +11,13 @@ module HollowMoon {
         this.animations.add('walk', [21, 22, 23, 24, 25], 10, true);
         this.animations.add('jump', [9, 10, 11, 12], 10, true);
         game.add.existing(this);
+        this.p2World = this.game.physics.p2;
         game.physics.p2.enable(this);
         this.body.fixedRotation = true;
         this.body.collideWorldBounds = true;
         //set Player parameters
         this.walkSpeed = 150;
         this.jumpSpeed = 350;
-        this.isGrounded = false;
-        this.body.onBeginContact.add(function(){this.isGrouned = true;}, this);
-        this.body.onEndContact.add(function(){this.isGrouned = false;}, this);
       }
 
       update() {
@@ -33,46 +32,26 @@ module HollowMoon {
         } else {
           this.animations.frame = 0;
         }
-        if(this.game.input.keyboard.isDown(KeyBindings.jump)) {
+        if(this.game.input.keyboard.isDown(KeyBindings.jump) && this.checkFloor()) {
           this.body.velocity.y = -this.jumpSpeed;
-          console.log('woah');
         }
-
-
-        /*this.body.velocity.x = 0;
-
-        if (this.game.input.keyboard.isDown(Phaser.Keyboard.LEFT)) {
-            this.body.velocity.x = -150;
-            // if(this.body.onFloor()) {
-            //   this.animations.play('walk');
-            // } else {
-              this.animations.play('jump');
-            // }
-            // if (this.scale.x === 1) {
-            //     this.scale.x = -1;
-            // }
-        } else if (this.game.input.keyboard.isDown(Phaser.Keyboard.RIGHT)) {
-            this.body.velocity.x = 150;
-            // if(this.body.onFloor()) {
-              this.animations.play('walk');
-            // } else {
-            //   this.animations.play('jump');
-            // }
-            // if (this.scale.x === -1) {
-            //     this.scale.x = 1;
-            // }
-        } else {
-            this.animations.frame = 0;
-        }
-        if(this.game.input.keyboard.isDown(Phaser.Keyboard.UP)  && this.body.onFloor()) {
-          this.body.velocity.y = -300;
-        }*/
       }
 
+      /** Checks if the player is grounded */
       checkFloor(): boolean {
-        var result = false;
-        this.body.on
+        //console.log(this.body.data);
+        var result:boolean = false;
+        var yAxis = p2.vec2.fromValues(0,1);
+        for(var i=0; i<this.p2World.world.narrowphase.contactEquations.length; i++){
+          var c = this.p2World.world.narrowphase.contactEquations[i];
+          if(c.bodyA === this.body.data || c.bodyB === this.body.data){
+            var d = p2.vec2.dot(c.normalA, yAxis); // Normal dot Y-axis
+            if(c.bodyA === this.body.data) d *= -1;
+            if(d > 0.5) result = true;
+          }
+        }
         return result;
       }
+
     }
 }

@@ -83,34 +83,22 @@ var HollowMoon;
         }
         /** Called once on load */
         GameWorld.prototype.create = function () {
-            // this.physics.startSystem(Phaser.Physics.ARCADE);
-            // this.background = this.add.sprite(0, 0, 'level1');
-            // this.music = this.add.audio('music', 1, false);
-            // this.music.play();
             this.worldGroup = new Phaser.Group(this.game, this.world, 'worldGroup');
             this.uiGroup = new Phaser.Group(this.game, this.world, 'uiGroup');
             this.physics.startSystem(Phaser.Physics.P2JS);
             this.physics.setBoundsToWorld();
             this.stage.backgroundColor = '2f9d8c';
-            this.player = new HollowMoon.Player(this.game, 0, 0);
+            /*this.player = new Player(this.game, 0, 0);
             this.player.name = 'player';
-            this.worldGroup.add(this.player);
+            this.worldGroup.add(this.player);*/
             this.createMap('mapStart');
-            /*this.p2PlayerGroup = this.game.physics.p2.createCollisionGroup();
-            this.p2ZoneGroup = this.game.physics.p2.createCollisionGroup();
-            this.player.body.setCollisionGroup(this.p2PlayerGroup);
-            this.player.body.collides(this.p2ZoneGroup, this.checkCollision, this);*/
-            this.game.camera.follow(this.player);
+            /*this.game.camera.follow(this.player);*/
             //creates tap eventListener and calls starFull() when triggered. This is only used for testing until a more permanent implementation.
             this.game.input.onTap.add(this.startFull, this.game.scale);
             this.game.time.advancedTiming = true;
-            //this.game.physics.p2.setPostBroadphaseCallback(this.checkCollision, this);
         };
         /** Called every frame, heart of the game loop */
         GameWorld.prototype.update = function () {
-            //this.game.physics.arcade.collide(this.player, this.layerPlatforms);
-            // if(this.player.x > 70)
-            //   this.createMap('tiled2');
             if (this.game.input.keyboard.isDown(Phaser.Keyboard.F)) {
                 this.game.time.fpsMin = 60;
             }
@@ -118,7 +106,6 @@ var HollowMoon;
         /** Use for debug information, called after update() */
         GameWorld.prototype.render = function () {
             this.game.debug.body(this.player);
-            //this.game.debug.text(this.game.cache.getJSON('tiledJson').layers[0].name, 10, 20);
             this.game.debug.text('current: ' + this.game.time.fps.toString(), 10, 20);
             this.game.debug.text('min: ' + this.game.time.fpsMin.toString(), 10, 40);
             this.game.debug.text('x: ' + this.player.position.x.toString(), 10, 60);
@@ -132,24 +119,30 @@ var HollowMoon;
         GameWorld.prototype.createMap = function (mapName) {
             //destroy the old map
             if (this.map !== undefined) {
+                /*this.game.physics.p2.clearTilemapLayerBodies(this.map);*/
+                this.game.physics.p2.clear();
                 this.map.destroy();
                 this.layerBG.destroy();
                 this.layerPlatforms.destroy();
+                this.zones.destroy();
+                /*this.player.kill();*/
+                this.player.destroy();
             }
             //create the new map
             var tilePath = 'gameRes/tilemaps/';
             var jsonFile = this.cache.getJSON(mapName + 'J');
-            //this.load.tilemap(mapName, '', jsonFile, Phaser.Tilemap.TILED_JSON);
             this.map = this.game.add.tilemap(mapName);
-            /*var bgPath:string = tilePath + jsonFile.tilesets[0].image;*/
-            /*var platformPath:string = tilePath + jsonFile.tilesets[1].image;*/
-            /*this.load.image(mapName + 'BG', bgPath);*/
-            /*console.log(bgPath);*/
-            /*this.load.image(mapName + 'Platforms', platformPath);*/
             this.map.addTilesetImage('bg', mapName + 'BG');
             this.map.addTilesetImage('platformTiles', mapName + 'Platforms');
             this.layerBG = this.map.createLayer('background');
             this.layerPlatforms = this.map.createLayer('platforms');
+            //set up character
+            var playerPos = jsonFile.layers[2].objects.filter(function (playerPos) {
+                return playerPos.type === 'playerSpawn';
+            })[0];
+            this.player = new HollowMoon.Player(this.game, playerPos.x, playerPos.y);
+            this.player.name = 'player';
+            this.camera.follow(this.player);
             //add all the tilemap layers to the worldGroup
             this.worldGroup.addMultiple([this.layerBG, this.layerPlatforms, this.player]);
             this.layerPlatforms.resizeWorld();
@@ -163,13 +156,13 @@ var HollowMoon;
             this.physics.p2.convertTilemap(this.map, 'platforms');
             this.game.physics.p2.restitution = 0.1;
             this.game.physics.p2.gravity.y = 300;
-            //this.game.physics.p2.enable(this.player);
             //setup character properly...needs to change when the data is imported from Tiled JSON
-            var playerPos = jsonFile.layers[2].objects.filter(function (playerPos) {
-                return playerPos.type === 'playerSpawn';
-            })[0];
-            this.player.position.x = playerPos.x;
-            this.player.position.y = playerPos.y;
+            /*var playerPos = jsonFile.layers[2].objects.filter(function ( playerPos ) {
+              return playerPos.type === 'playerSpawn';
+              })[0];*/
+            //this.player.body.reset(playerPos.x, playerPos.y);
+            //this.player.revive();
+            //this.game.physics.p2.enable(this.player);
             //zone init
             var zoneSpot = jsonFile.layers[2].objects.filter(function (zoneSpot) {
                 return zoneSpot.type === 'zoneEdge';
@@ -178,21 +171,9 @@ var HollowMoon;
             this.world.add(this.zones);
             this.game.physics.p2.enable(this.zones);
             this.zones.body.onBeginContact.add(this.checkCollision, this);
-            /*var blah = this.physics.p2.createBody(zoneSpot.x, zoneSpot.y, 0);
-            blah.setCollisionGroup(this.p2ZoneGroup);
-            blah.addRectangle(100,100);*/
-            console.log(zoneSpot);
-            /*this.map.addTilesetImage('extBG', 'extBG');
-            this.map.addTilesetImage('extPara', 'extPara');
-            this.map.addTilesetImage('platformTiles', 'platformTiles');*/
-            //should be tile sprite of smaller image...
-            //var blah = this.add.image(0,0,'test2BG', this.worldGroup);
-            //this.layerBG = this.map.createLayer('background');
-            //this.layerParallax = this.map.createLayer('parallax');
-            /*var tileBG = this.add.tileSprite(0,0,this.world.width, this.world.height, 'extBG');
-            var tilePara = this.add.tileSprite(0,0,this.world.width, this.world.height, 'extPara');*/
         };
         GameWorld.prototype.checkCollision = function (body1, body2, body3, body4) {
+            console.log('owwwwwwwwwwww!!');
             if (body1.sprite !== null && body1.sprite.name === 'player') {
                 this.createMap('mapSecond');
             }
@@ -271,15 +252,13 @@ var HollowMoon;
             this.animations.add('walk', [21, 22, 23, 24, 25], 10, true);
             this.animations.add('jump', [9, 10, 11, 12], 10, true);
             game.add.existing(this);
+            this.p2World = this.game.physics.p2;
             game.physics.p2.enable(this);
             this.body.fixedRotation = true;
             this.body.collideWorldBounds = true;
             //set Player parameters
             this.walkSpeed = 150;
             this.jumpSpeed = 350;
-            this.isGrounded = false;
-            this.body.onBeginContact.add(function () { this.isGrouned = true; }, this);
-            this.body.onEndContact.add(function () { this.isGrouned = false; }, this);
         }
         Player.prototype.update = function () {
             this.body.velocity.x = 0;
@@ -294,42 +273,25 @@ var HollowMoon;
             else {
                 this.animations.frame = 0;
             }
-            if (this.game.input.keyboard.isDown(HollowMoon.KeyBindings.jump)) {
+            if (this.game.input.keyboard.isDown(HollowMoon.KeyBindings.jump) && this.checkFloor()) {
                 this.body.velocity.y = -this.jumpSpeed;
-                console.log('woah');
             }
-            /*this.body.velocity.x = 0;
-    
-            if (this.game.input.keyboard.isDown(Phaser.Keyboard.LEFT)) {
-                this.body.velocity.x = -150;
-                // if(this.body.onFloor()) {
-                //   this.animations.play('walk');
-                // } else {
-                  this.animations.play('jump');
-                // }
-                // if (this.scale.x === 1) {
-                //     this.scale.x = -1;
-                // }
-            } else if (this.game.input.keyboard.isDown(Phaser.Keyboard.RIGHT)) {
-                this.body.velocity.x = 150;
-                // if(this.body.onFloor()) {
-                  this.animations.play('walk');
-                // } else {
-                //   this.animations.play('jump');
-                // }
-                // if (this.scale.x === -1) {
-                //     this.scale.x = 1;
-                // }
-            } else {
-                this.animations.frame = 0;
-            }
-            if(this.game.input.keyboard.isDown(Phaser.Keyboard.UP)  && this.body.onFloor()) {
-              this.body.velocity.y = -300;
-            }*/
         };
+        /** Checks if the player is grounded */
         Player.prototype.checkFloor = function () {
+            //console.log(this.body.data);
             var result = false;
-            this.body.on;
+            var yAxis = p2.vec2.fromValues(0, 1);
+            for (var i = 0; i < this.p2World.world.narrowphase.contactEquations.length; i++) {
+                var c = this.p2World.world.narrowphase.contactEquations[i];
+                if (c.bodyA === this.body.data || c.bodyB === this.body.data) {
+                    var d = p2.vec2.dot(c.normalA, yAxis); // Normal dot Y-axis
+                    if (c.bodyA === this.body.data)
+                        d *= -1;
+                    if (d > 0.5)
+                        result = true;
+                }
+            }
             return result;
         };
         return Player;
