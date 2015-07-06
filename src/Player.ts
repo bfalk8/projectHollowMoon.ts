@@ -15,9 +15,12 @@ module HollowMoon {
         game.physics.p2.enable(this);
         this.body.fixedRotation = true;
         this.body.collideWorldBounds = true;
+        this.body.onBeginContact.add(this.setGrounded, this);
+        this.body.onEndContact.add(this.setGrounded, this);
         //set Player parameters
         this.walkSpeed = 150;
         this.jumpSpeed = 350;
+        this.isGrounded = false;
       }
 
       update() {
@@ -32,7 +35,7 @@ module HollowMoon {
         } else {
           this.animations.frame = 0;
         }
-        if(this.game.input.keyboard.isDown(KeyBindings.jump) && this.checkFloor()) {
+        if(this.game.input.keyboard.isDown(KeyBindings.jump) && this.isGrounded) {
           this.body.velocity.y = -this.jumpSpeed;
         }
       }
@@ -51,6 +54,11 @@ module HollowMoon {
           }
         }
         return result;
+      }
+
+      /** onBeginCollision and onEndCollision callback */
+      setGrounded(a, b, c, d) {
+        this.isGrounded = !this.isGrounded;
       }
 
     }
