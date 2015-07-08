@@ -18,7 +18,7 @@ module HollowMoon {
         create() {
           this.worldGroup = new Phaser.Group(this.game, this.world, 'worldGroup');
           this.uiGroup = new Phaser.Group(this.game, this.world, 'uiGroup');
-          this.physics.startSystem(Phaser.Physics.P2JS);
+          this.physics.startSystem(Phaser.Physics.ARCADE);
           this.physics.setBoundsToWorld();
           this.stage.backgroundColor = '2f9d8c';
           this.createMap('mapStart');
@@ -30,6 +30,7 @@ module HollowMoon {
 
         /** Called every frame, heart of the game loop */
         update() {
+          this.game.physics.arcade.collide(this.player, this.layerPlatforms);
           if(this.game.input.keyboard.isDown(Phaser.Keyboard.F)) {
             this.game.time.fpsMin = 60;
           }
@@ -55,8 +56,8 @@ module HollowMoon {
           this.mapName = mapName;
           //destroy the old map
           if(this.map !== undefined) {
-            /*this.game.physics.p2.clearTilemapLayerBodies(this.map);*/
-            this.game.physics.p2.clear();
+            /*this.game.physics.arcade.clearTilemapLayerBodies(this.map, this.layerPlatforms);*/
+            /*this.game.physics.p2.clear();*/
             this.map.destroy();
             this.layerBG.destroy();
             this.layerPlatforms.destroy();
@@ -88,10 +89,10 @@ module HollowMoon {
 
           //collisions
           this.map.setCollisionByExclusion([0], true, 'platforms');
-          console.log(this.physics.p2.convertTilemap(this.map, 'platforms'));
-          this.game.physics.p2.restitution = 0;
+          /*this.physics.ninja.convertTilemap(this.map, 'platforms',{});*/
+          /*this.game.physics.p2.restitution = 0;
           this.game.physics.p2.friction = 1;
-          this.game.physics.p2.gravity.y = 300;
+          this.game.physics.p2.gravity.y = 300;*/
 
           //zone init
           var zoneEdges = jsonFile.layers[2].objects.filter(function ( element ) {

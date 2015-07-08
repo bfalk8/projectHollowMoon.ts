@@ -2,8 +2,10 @@ module HollowMoon {
     export class Player extends Phaser.Sprite {
       walkSpeed: number;
       jumpSpeed: number;
+      fallSpeed: number;
       isGrounded: boolean;
-      p2World: Phaser.Physics.P2;
+      pWorld: Phaser.Physics.Arcade;
+      pBody: Phaser.Physics.Arcade.Body;
 
       constructor(game: Phaser.Game, x: number, y: number) {
         super(game, x, y, 'elisa', 0);
@@ -11,37 +13,39 @@ module HollowMoon {
         this.animations.add('walk', [21, 22, 23, 24, 25], 10, true);
         this.animations.add('jump', [9, 10, 11, 12], 10, true);
         game.add.existing(this);
-        this.p2World = this.game.physics.p2;
-        game.physics.p2.enable(this);
+        game.physics.arcade.enable(this);
+        this.body.gravity.y = 100;
+
         this.body.fixedRotation = true;
         this.body.collideWorldBounds = true;
-        this.body.onBeginContact.add(this.setGrounded, this);
-        this.body.onEndContact.add(this.setGrounded, this);
+        this.pWorld = this.game.physics.arcade;
+        this.pBody = this.body;
+
         //set Player parameters
         this.walkSpeed = 150;
         this.jumpSpeed = 350;
         this.isGrounded = false;
+        this.fallSpeed = 600;
       }
 
       update() {
         this.body.velocity.x = 0;
-
         if(this.game.input.keyboard.isDown(KeyBindings.moveRight)) {
-          this.body.moveRight(this.walkSpeed);
+          this.pBody.velocity.x = this.walkSpeed;
           this.animations.play('walk');
         } else if (this.game.input.keyboard.isDown(KeyBindings.moveLeft)) {
-          this.body.moveLeft(this.walkSpeed);
+          this.pBody.velocity.x = -this.walkSpeed;
           this.animations.play('jump');
         } else {
           this.animations.frame = 0;
         }
-        if(this.game.input.keyboard.isDown(KeyBindings.jump) && this.isGrounded) {
+        if(this.game.input.keyboard.isDown(KeyBindings.jump) && this.pBody.onFloor()) {
           this.body.velocity.y = -this.jumpSpeed;
         }
       }
 
       /** Checks if the player is grounded */
-      checkFloor(): boolean {
+      /*checkFloor(): boolean {
         //console.log(this.body.data);
         var result:boolean = false;
         var yAxis = p2.vec2.fromValues(0,1);
@@ -54,10 +58,11 @@ module HollowMoon {
           }
         }
         return result;
-      }
+      }*/
 
       /** onBeginCollision and onEndCollision callback */
       setGrounded(a, b, c, d) {
+        console.log('blah');
         this.isGrounded = !this.isGrounded;
       }
 

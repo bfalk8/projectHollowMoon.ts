@@ -2,7 +2,7 @@ module HollowMoon {
     export class Boot extends Phaser.State {
       preload() {
         this.load.image('preloadBar' , 'gameRes/sprites/loader.png');
-        //load all tilemap json files
+        //load all tilemap json files listed in MapList var in MapData.ts
         var tilePath:string = 'gameRes/tilemaps/';
         for(var map in MapList) {
           this.load.json(map + 'J', tilePath + MapList[map]);

@@ -5,6 +5,7 @@ var router = express.Router();
 router.get('/', function(req, res, next) {
   res.render('index', {
     title: 'Hollow Moon',
+    //phaserPath: 'bower/phaser/build/phaser.js',
     phaserPath: 'bower/phaser/build/phaser.js',
     gamePath: 'gameRes/scripts/game.js'});
 });
