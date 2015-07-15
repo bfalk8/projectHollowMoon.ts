@@ -54,7 +54,9 @@ var HollowMoon;
     var Game = (function (_super) {
         __extends(Game, _super);
         function Game() {
-            _super.call(this, 1024, 576, Phaser.CANVAS, '');
+            /*super(1024, 576, Phaser.CANVAS, '');*/
+            //trying 720p as that seems to be the best for scaling
+            _super.call(this, 1280, 720, Phaser.CANVAS, '');
             this.state.add('Boot', HollowMoon.Boot, false);
             this.state.add('Preloader', HollowMoon.Preloader, false);
             this.state.add('MainMenu', HollowMoon.MainMenu, false);
@@ -278,26 +280,35 @@ var HollowMoon;
             this.animations.add('jump', [9, 10, 11, 12], 10, true);
             game.add.existing(this);
             game.physics.arcade.enable(this);
-            this.body.gravity.y = 100;
+            this.body.gravity.y = 300;
             this.body.fixedRotation = true;
             this.body.collideWorldBounds = true;
             this.pWorld = this.game.physics.arcade;
             this.pBody = this.body;
             //set Player parameters
             this.walkSpeed = 150;
-            this.jumpSpeed = -100;
-            this.isGrounded = false;
-            this.fallSpeed = 600;
+            this.jumpSpeed = -200;
+            this.fallSpeed = 100;
         }
         Player.prototype.update = function () {
             this.body.velocity.x = 0;
             if (this.game.input.keyboard.isDown(HollowMoon.KeyBindings.moveRight)) {
-                this.pBody.velocity.x = this.walkSpeed;
-                this.animations.play('walk');
+                if (this.pBody.onFloor()) {
+                    this.pBody.velocity.x = this.walkSpeed;
+                    this.animations.play('walk');
+                }
+                else {
+                    this.pBody.velocity.x = this.fallSpeed;
+                }
             }
             else if (this.game.input.keyboard.isDown(HollowMoon.KeyBindings.moveLeft)) {
-                this.pBody.velocity.x = -this.walkSpeed;
-                this.animations.play('jump');
+                if (this.pBody.onFloor()) {
+                    this.pBody.velocity.x = -this.walkSpeed;
+                    this.animations.play('jump');
+                }
+                else {
+                    this.pBody.velocity.x = -this.fallSpeed;
+                }
             }
             else {
                 this.animations.frame = 0;
@@ -320,18 +331,7 @@ var HollowMoon;
         Preloader.prototype.preload = function () {
             this.preloadBar = this.game.add.sprite(200, 250, 'preloadBar');
             this.load.setPreloadSprite(this.preloadBar);
-            // this.load.image('titlepage', 'gameRes/titlepage.jpg');
-            // this.load.image('logo', 'gameRes/logo.png');
-            // this.load.audio('music', 'gameRes/title.mp3', true);
             this.load.spritesheet('elisa', 'gameRes/sprites/elisa.png', 56, 56);
-            //this.load.tilemap('mapStart', 'gameRes/tilemaps/mapStart.json', null, Phaser.Tilemap.TILED_JSON);
-            //this.load.tilemap('mapSecond', 'gameRes/tilemaps/mapSecond.json', null, Phaser.Tilemap.TILED_JSON);
-            /*this.load.image('extBG', 'gameRes/tilemaps/extBG.png');
-            this.load.image('extPara', 'gameRes/tilemaps/extPara.png');
-            this.load.image('platformTiles', 'gameRes/tilemaps/platformTiles.png');*/
-            /*this.load.json('mapStartJ', 'gameRes/tilemaps/mapStart.json');
-            this.load.json('mapSecondJ', 'gameRes/tilemaps/mapSecond.json');*/
-            //this.load.image('test2BG', 'gameRes/tilemaps/test2.png');
             //Load all the data required for TileMaps
             for (var map in HollowMoon.MapList) {
                 var jsonFile = this.cache.getJSON(map + 'J');

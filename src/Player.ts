@@ -3,7 +3,6 @@ module HollowMoon {
       walkSpeed: number;
       jumpSpeed: number;
       fallSpeed: number;
-      isGrounded: boolean;
       pWorld: Phaser.Physics.Arcade;
       pBody: Phaser.Physics.Arcade.Body;
 
@@ -14,7 +13,7 @@ module HollowMoon {
         this.animations.add('jump', [9, 10, 11, 12], 10, true);
         game.add.existing(this);
         game.physics.arcade.enable(this);
-        this.body.gravity.y = 100;
+        this.body.gravity.y = 300;
 
         this.body.fixedRotation = true;
         this.body.collideWorldBounds = true;
@@ -23,20 +22,29 @@ module HollowMoon {
 
         //set Player parameters
         this.walkSpeed = 150;
-        this.jumpSpeed = -100;
-        this.isGrounded = false;
-        this.fallSpeed = 600;
+        this.jumpSpeed = -200;
+        this.fallSpeed = 100;
 
       }
 
       update() {
         this.body.velocity.x = 0;
         if(this.game.input.keyboard.isDown(KeyBindings.moveRight)) {
-          this.pBody.velocity.x = this.walkSpeed;
-          this.animations.play('walk');
+          if(this.pBody.onFloor()) {
+            this.pBody.velocity.x = this.walkSpeed;
+            this.animations.play('walk');
+          } else {
+            this.pBody.velocity.x = this.fallSpeed;
+            /*this.animations.play('fall');*/
+          }
         } else if (this.game.input.keyboard.isDown(KeyBindings.moveLeft)) {
-          this.pBody.velocity.x = -this.walkSpeed;
-          this.animations.play('jump');
+          if(this.pBody.onFloor()){
+            this.pBody.velocity.x = -this.walkSpeed;
+            this.animations.play('jump');
+          } else {
+            this.pBody.velocity.x = -this.fallSpeed;
+            /*this.animations.play('fall');*/
+          }
         } else {
           this.animations.frame = 0;
         }

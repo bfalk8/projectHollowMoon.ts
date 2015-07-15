@@ -1,7 +1,9 @@
 module HollowMoon {
     export class Game extends Phaser.Game {
       constructor() {
-          super(1024, 576, Phaser.CANVAS, '');
+          /*super(1024, 576, Phaser.CANVAS, '');*/
+          //trying 720p as that seems to be the best for scaling
+          super(1280, 720, Phaser.CANVAS, '');
           this.state.add('Boot', Boot, false);
           this.state.add('Preloader', Preloader, false);
           this.state.add('MainMenu', MainMenu, false);

@@ -30,6 +30,6 @@
         "./src/MapData.ts",
         "./src/Player.ts",
         "./src/Preloader.ts",
-        "./src/ZoneEdge.ts"
+        "./src/Zone.ts"
     ]
 }
