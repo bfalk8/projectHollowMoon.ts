@@ -23,9 +23,10 @@ module HollowMoon {
 
         //set Player parameters
         this.walkSpeed = 150;
-        this.jumpSpeed = 350;
+        this.jumpSpeed = -100;
         this.isGrounded = false;
         this.fallSpeed = 600;
+
       }
 
       update() {
@@ -40,30 +41,8 @@ module HollowMoon {
           this.animations.frame = 0;
         }
         if(this.game.input.keyboard.isDown(KeyBindings.jump) && this.pBody.onFloor()) {
-          this.body.velocity.y = -this.jumpSpeed;
+          this.body.velocity.y = this.jumpSpeed;
         }
-      }
-
-      /** Checks if the player is grounded */
-      /*checkFloor(): boolean {
-        //console.log(this.body.data);
-        var result:boolean = false;
-        var yAxis = p2.vec2.fromValues(0,1);
-        for(var i=0; i<this.p2World.world.narrowphase.contactEquations.length; i++){
-          var c = this.p2World.world.narrowphase.contactEquations[i];
-          if(c.bodyA === this.body.data || c.bodyB === this.body.data){
-            var d = p2.vec2.dot(c.normalA, yAxis); // Normal dot Y-axis
-            if(c.bodyA === this.body.data) d *= -1;
-            if(d > 0.5) result = true;
-          }
-        }
-        return result;
-      }*/
-
-      /** onBeginCollision and onEndCollision callback */
-      setGrounded(a, b, c, d) {
-        console.log('blah');
-        this.isGrounded = !this.isGrounded;
       }
 
     }

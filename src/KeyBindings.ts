@@ -4,9 +4,10 @@ module HollowMoon {
   export var KeyBindings = {
     moveLeft: Phaser.Keyboard.LEFT,
     moveRight: Phaser.Keyboard.RIGHT,
-    jump: Phaser.Keyboard.UP,
+    jump: Phaser.Keyboard.SPACEBAR,
     crouch: Phaser.Keyboard.DOWN,
     dodge: Phaser.Keyboard.CONTROL,
+    openDoor: Phaser.Keyboard.UP
   };
 
   /**
@@ -17,5 +18,5 @@ module HollowMoon {
   export function changeKey(binding:string, key:number) {
     KeyBindings[binding] = key;
   }
-  
+
 }

@@ -100,6 +100,9 @@ var HollowMoon;
                 this.game.time.fpsMin = 60;
             }
             this.checkZoneEdges();
+            if (this.game.input.keyboard.isDown(HollowMoon.KeyBindings.openDoor)) {
+                this.checkZoneDoors();
+            }
         };
         /** Use for debug information, called after update() */
         GameWorld.prototype.render = function () {
@@ -116,14 +119,11 @@ var HollowMoon;
         /** Creates the level from tile map data.*/
         GameWorld.prototype.createMap = function (mapName) {
             this.mapName = mapName;
-            //destroy the old map
+            //destroy the old map and player
             if (this.map !== undefined) {
-                /*this.game.physics.arcade.clearTilemapLayerBodies(this.map, this.layerPlatforms);*/
-                /*this.game.physics.p2.clear();*/
                 this.map.destroy();
                 this.layerBG.destroy();
                 this.layerPlatforms.destroy();
-                /*this.player.kill();*/
                 this.player.destroy();
             }
             //create the new map
@@ -146,19 +146,34 @@ var HollowMoon;
             this.worldGroup.sort();
             //collisions
             this.map.setCollisionByExclusion([0], true, 'platforms');
-            /*this.physics.ninja.convertTilemap(this.map, 'platforms',{});*/
-            /*this.game.physics.p2.restitution = 0;
-            this.game.physics.p2.friction = 1;
-            this.game.physics.p2.gravity.y = 300;*/
             //zone init
-            var zoneEdges = jsonFile.layers[2].objects.filter(function (element) {
+            var zones;
+            for (var elem in jsonFile.layers) {
+                if (jsonFile.layers[elem].name === "zones") {
+                    zones = jsonFile.layers[elem];
+                }
+            }
+            //creates the zones for the edges of the current room
+            var zoneEdges = zones.objects.filter(function (element) {
                 return element.type === 'zoneEdge';
             });
             this.zoneEdges = [];
             for (var zone in zoneEdges) {
                 var currZone = zoneEdges[zone];
-                this.zoneEdges.push(new HollowMoon.ZoneEdge(currZone.x, currZone.y, currZone.width, currZone.height, currZone.name));
+                this.zoneEdges.push(new HollowMoon.Zone(currZone.x, currZone.y, currZone.width, currZone.height, currZone.name));
             }
+            //creates the zones that are used as 'doors'
+            var zoneDoors = zones.objects.filter(function (element) {
+                return element.type === 'zoneDoor';
+            });
+            this.zoneDoors = [];
+            for (var zone in zoneDoors) {
+                var currZone = zoneDoors[zone];
+                this.zoneDoors.push(new HollowMoon.Zone(currZone.x, currZone.y, currZone.width, currZone.height, currZone.name));
+            }
+        };
+        /** Finds object with proper property */
+        GameWorld.prototype.findElement = function (prop) {
         };
         /** Sets up player in new zone */
         GameWorld.prototype.createPlayer = function () {
@@ -178,6 +193,15 @@ var HollowMoon;
                 }
             }
         };
+        /** Checks if player is overlapping with a zone door */
+        GameWorld.prototype.checkZoneDoors = function () {
+            var playerCheck = new Phaser.Rectangle(this.player.x, this.player.y, this.player.width, this.player.height);
+            for (var zone in this.zoneDoors) {
+                if (Phaser.Rectangle.intersects(playerCheck, this.zoneDoors[zone])) {
+                    this.createMap(this.zoneDoors[zone].name);
+                }
+            }
+        };
         return GameWorld;
     })(Phaser.State);
     HollowMoon.GameWorld = GameWorld;
@@ -188,9 +212,10 @@ var HollowMoon;
     HollowMoon.KeyBindings = {
         moveLeft: Phaser.Keyboard.LEFT,
         moveRight: Phaser.Keyboard.RIGHT,
-        jump: Phaser.Keyboard.UP,
+        jump: Phaser.Keyboard.SPACEBAR,
         crouch: Phaser.Keyboard.DOWN,
         dodge: Phaser.Keyboard.CONTROL,
+        openDoor: Phaser.Keyboard.UP
     };
     /**
      * Changes key bindings for use withing game.
@@ -260,7 +285,7 @@ var HollowMoon;
             this.pBody = this.body;
             //set Player parameters
             this.walkSpeed = 150;
-            this.jumpSpeed = 350;
+            this.jumpSpeed = -100;
             this.isGrounded = false;
             this.fallSpeed = 600;
         }
@@ -278,28 +303,8 @@ var HollowMoon;
                 this.animations.frame = 0;
             }
             if (this.game.input.keyboard.isDown(HollowMoon.KeyBindings.jump) && this.pBody.onFloor()) {
-                this.body.velocity.y = -this.jumpSpeed;
+                this.body.velocity.y = this.jumpSpeed;
             }
-        };
-        /** Checks if the player is grounded */
-        /*checkFloor(): boolean {
-          //console.log(this.body.data);
-          var result:boolean = false;
-          var yAxis = p2.vec2.fromValues(0,1);
-          for(var i=0; i<this.p2World.world.narrowphase.contactEquations.length; i++){
-            var c = this.p2World.world.narrowphase.contactEquations[i];
-            if(c.bodyA === this.body.data || c.bodyB === this.body.data){
-              var d = p2.vec2.dot(c.normalA, yAxis); // Normal dot Y-axis
-              if(c.bodyA === this.body.data) d *= -1;
-              if(d > 0.5) result = true;
-            }
-          }
-          return result;
-        }*/
-        /** onBeginCollision and onEndCollision callback */
-        Player.prototype.setGrounded = function (a, b, c, d) {
-            console.log('blah');
-            this.isGrounded = !this.isGrounded;
         };
         return Player;
     })(Phaser.Sprite);
@@ -351,14 +356,14 @@ var HollowMoon;
 })(HollowMoon || (HollowMoon = {}));
 var HollowMoon;
 (function (HollowMoon) {
-    var ZoneEdge = (function (_super) {
-        __extends(ZoneEdge, _super);
-        function ZoneEdge(x, y, width, height, name) {
+    var Zone = (function (_super) {
+        __extends(Zone, _super);
+        function Zone(x, y, width, height, name) {
             _super.call(this, x, y, width, height);
             this.name = name;
         }
-        return ZoneEdge;
+        return Zone;
     })(Phaser.Rectangle);
-    HollowMoon.ZoneEdge = ZoneEdge;
+    HollowMoon.Zone = Zone;
 })(HollowMoon || (HollowMoon = {}));
 //# sourceMappingURL=game.js.map
