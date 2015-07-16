@@ -5,9 +5,10 @@ module HollowMoon {
         uiGroup: Phaser.Group;
         player: Player;
         map: Phaser.Tilemap;
-        layerBG: Phaser.TilemapLayer;
-        layerParallax: Phaser.TilemapLayer;
         layerPlatforms: Phaser.TilemapLayer;
+        imagePara: Phaser.Image;
+        imageBG: Phaser.Image;
+        imageFG: Phaser.Image;
         mapName: string;
         zoneEdges: Zone[];
         zoneDoors: Zone[];
@@ -43,8 +44,8 @@ module HollowMoon {
           this.game.debug.body(this.player);
           this.game.debug.text('current: ' + this.game.time.fps.toString(), 10, 20);
           this.game.debug.text('min: ' + this.game.time.fpsMin.toString(), 10, 40);
-          this.game.debug.text('x: ' + this.player.position.x.toString(), 10, 60);
-          this.game.debug.text('y: ' + this.player.position.y.toString(), 10, 80);
+          this.game.debug.text('x: ' + this.player.position.x.toPrecision(6), 10, 60);
+          this.game.debug.text('y: ' + this.player.position.y.toPrecision(6), 10, 80);
         }
 
         /** Used for going into Fullscreen mode.*/
@@ -55,10 +56,13 @@ module HollowMoon {
         /** Creates the level from tile map data.*/
         createMap(mapName: string) {
           this.mapName = mapName;
+          console.log(mapName);
           //destroy the old map and player
           if(this.map !== undefined) {
             this.map.destroy();
-            this.layerBG.destroy();
+            this.imageBG.destroy();
+            this.imagePara.destroy();
+            this.imageFG.destroy();
             this.layerPlatforms.destroy();
             this.player.destroy();
           }
@@ -67,22 +71,28 @@ module HollowMoon {
           var jsonFile = this.cache.getJSON(mapName + 'J');
           this.map = this.game.add.tilemap(mapName);
 
-          this.map.addTilesetImage('bg', mapName + 'BG');
           this.map.addTilesetImage('platformTiles', mapName + 'Platforms');
-          this.layerBG = this.map.createLayer('background');
+          this.imagePara = this.game.add.image(0, 0, mapName + 'Para');
+          this.imageBG = this.game.add.image(0, 0, mapName + 'BG');
+          this.imageFG = this.game.add.image(0, 0, mapName + 'FG');
           this.layerPlatforms = this.map.createLayer('platforms');
+
+          //parallax effects
+          /*this.layerBG.scrollFactorX = 0.5;*/
 
           //set up character
           this.createPlayer();
 
           //add all the tilemap layers to the worldGroup
-          this.worldGroup.addMultiple([this.layerBG, this.layerPlatforms, this.player]);
+          this.worldGroup.addMultiple([this.imagePara, this.imageBG, this.layerPlatforms, this.player, this.imageFG]);
           this.layerPlatforms.resizeWorld();
 
           //set rendering order and sort the group fro proper rendering
-          this.layerBG.z = 0;
-          this.layerPlatforms.z = 1;
-          this.player.z = 4;
+          this.imagePara.z = 0;
+          this.imageBG.z = 1;
+          this.layerPlatforms.z = 2;
+          this.player.z = 3;
+          this.imageFG.z = 4;
           this.worldGroup.sort();
 
           //collisions
@@ -123,7 +133,7 @@ module HollowMoon {
 
         /** Sets up player in new zone */
         createPlayer() {
-          var playerPos = this.cache.getJSON(this.mapName + 'J').layers[2].objects.filter(function ( playerPos ) {
+          var playerPos = this.cache.getJSON(this.mapName + 'J').layers[7].objects.filter(function ( playerPos ) {
             return playerPos.type === 'playerSpawn';
           })[0];
 

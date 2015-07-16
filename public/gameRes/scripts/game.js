@@ -54,9 +54,9 @@ var HollowMoon;
     var Game = (function (_super) {
         __extends(Game, _super);
         function Game() {
-            /*super(1024, 576, Phaser.CANVAS, '');*/
+            _super.call(this, 1024, 576, Phaser.CANVAS, '');
             //trying 720p as that seems to be the best for scaling
-            _super.call(this, 1280, 720, Phaser.CANVAS, '');
+            /*super(1280, 720, Phaser.CANVAS, '');*/
             this.state.add('Boot', HollowMoon.Boot, false);
             this.state.add('Preloader', HollowMoon.Preloader, false);
             this.state.add('MainMenu', HollowMoon.MainMenu, false);
@@ -111,8 +111,8 @@ var HollowMoon;
             this.game.debug.body(this.player);
             this.game.debug.text('current: ' + this.game.time.fps.toString(), 10, 20);
             this.game.debug.text('min: ' + this.game.time.fpsMin.toString(), 10, 40);
-            this.game.debug.text('x: ' + this.player.position.x.toString(), 10, 60);
-            this.game.debug.text('y: ' + this.player.position.y.toString(), 10, 80);
+            this.game.debug.text('x: ' + this.player.position.x.toPrecision(6), 10, 60);
+            this.game.debug.text('y: ' + this.player.position.y.toPrecision(6), 10, 80);
         };
         /** Used for going into Fullscreen mode.*/
         GameWorld.prototype.startFull = function () {
@@ -121,10 +121,13 @@ var HollowMoon;
         /** Creates the level from tile map data.*/
         GameWorld.prototype.createMap = function (mapName) {
             this.mapName = mapName;
+            console.log(mapName);
             //destroy the old map and player
             if (this.map !== undefined) {
                 this.map.destroy();
-                this.layerBG.destroy();
+                this.imageBG.destroy();
+                this.imagePara.destroy();
+                this.imageFG.destroy();
                 this.layerPlatforms.destroy();
                 this.player.destroy();
             }
@@ -132,19 +135,24 @@ var HollowMoon;
             var tilePath = 'gameRes/tilemaps/';
             var jsonFile = this.cache.getJSON(mapName + 'J');
             this.map = this.game.add.tilemap(mapName);
-            this.map.addTilesetImage('bg', mapName + 'BG');
             this.map.addTilesetImage('platformTiles', mapName + 'Platforms');
-            this.layerBG = this.map.createLayer('background');
+            this.imagePara = this.game.add.image(0, 0, mapName + 'Para');
+            this.imageBG = this.game.add.image(0, 0, mapName + 'BG');
+            this.imageFG = this.game.add.image(0, 0, mapName + 'FG');
             this.layerPlatforms = this.map.createLayer('platforms');
+            //parallax effects
+            /*this.layerBG.scrollFactorX = 0.5;*/
             //set up character
             this.createPlayer();
             //add all the tilemap layers to the worldGroup
-            this.worldGroup.addMultiple([this.layerBG, this.layerPlatforms, this.player]);
+            this.worldGroup.addMultiple([this.imagePara, this.imageBG, this.layerPlatforms, this.player, this.imageFG]);
             this.layerPlatforms.resizeWorld();
             //set rendering order and sort the group fro proper rendering
-            this.layerBG.z = 0;
-            this.layerPlatforms.z = 1;
-            this.player.z = 4;
+            this.imagePara.z = 0;
+            this.imageBG.z = 1;
+            this.layerPlatforms.z = 2;
+            this.player.z = 3;
+            this.imageFG.z = 4;
             this.worldGroup.sort();
             //collisions
             this.map.setCollisionByExclusion([0], true, 'platforms');
@@ -179,7 +187,7 @@ var HollowMoon;
         };
         /** Sets up player in new zone */
         GameWorld.prototype.createPlayer = function () {
-            var playerPos = this.cache.getJSON(this.mapName + 'J').layers[2].objects.filter(function (playerPos) {
+            var playerPos = this.cache.getJSON(this.mapName + 'J').layers[7].objects.filter(function (playerPos) {
                 return playerPos.type === 'playerSpawn';
             })[0];
             this.player = new HollowMoon.Player(this.game, playerPos.x, playerPos.y);
@@ -337,9 +345,18 @@ var HollowMoon;
                 var jsonFile = this.cache.getJSON(map + 'J');
                 var tilePath = 'gameRes/tilemaps/';
                 this.load.tilemap(map, '', jsonFile, Phaser.Tilemap.TILED_JSON);
-                var bgPath = tilePath + jsonFile.tilesets[0].image;
-                var platformPath = tilePath + jsonFile.tilesets[1].image;
-                this.load.image(map + 'BG', bgPath);
+                //finds all the image layers in the Tiled json
+                var imageArr = jsonFile.layers.filter(function (element) {
+                    return element.type === 'imagelayer';
+                });
+                //loads all the images from the image layers
+                for (var image in imageArr) {
+                    this.load.image(map + imageArr[image].name, tilePath + imageArr[image].image);
+                }
+                //finds and loads the sprite sheet for the platform tilemap layer
+                var platformPath = tilePath + jsonFile.tilesets.filter(function (element) {
+                    return element.name === 'platformTiles';
+                })[0].image;
                 this.load.image(map + 'Platforms', platformPath);
             }
         };
