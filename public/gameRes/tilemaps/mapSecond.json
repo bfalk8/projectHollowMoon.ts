@@ -1,13 +1,13 @@
 { "height":20,
  "layers":[
         {
-         "height":20,
+         "height":0,
          "image":"backgrounds\/mapSecondPara.png",
          "name":"Para",
          "opacity":1,
          "type":"imagelayer",
          "visible":true,
-         "width":50,
+         "width":0,
          "x":0,
          "y":0
         }, 
@@ -23,13 +23,13 @@
          "y":0
         }, 
         {
-         "height":20,
+         "height":0,
          "image":"backgrounds\/mapSecondBG.png",
          "name":"BG",
          "opacity":1,
          "type":"imagelayer",
          "visible":true,
-         "width":50,
+         "width":0,
          "x":0,
          "y":0
         }, 
@@ -56,13 +56,13 @@
          "y":0
         }, 
         {
-         "height":20,
+         "height":0,
          "image":"backgrounds\/mapSecondFG.png",
          "name":"FG",
          "opacity":1,
          "type":"imagelayer",
          "visible":true,
-         "width":50,
+         "width":0,
          "x":0,
          "y":0
         }, 

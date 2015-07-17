@@ -6,12 +6,13 @@ module HollowMoon {
         player: Player;
         map: Phaser.Tilemap;
         layerPlatforms: Phaser.TilemapLayer;
-        imagePara: Phaser.Image;
+        imagePara: Phaser.TileSprite;
         imageBG: Phaser.Image;
         imageFG: Phaser.Image;
         mapName: string;
         zoneEdges: Zone[];
         zoneDoors: Zone[];
+        parallaxAmmount: number;
 
         /** Called once on load */
         create() {
@@ -21,6 +22,7 @@ module HollowMoon {
           this.physics.setBoundsToWorld();
           this.stage.backgroundColor = '2f9d8c';
           this.createMap('mapStart');
+          this.parallaxAmmount = 0.3;
 
           //creates tap eventListener and calls starFull() when triggered. This is only used for testing until a more permanent implementation.
           this.game.input.onTap.add(this.startFull, this.game.scale);
@@ -37,11 +39,15 @@ module HollowMoon {
           if(this.game.input.keyboard.isDown(KeyBindings.openDoor)) {
             this.checkZoneDoors();
           }
+
+          //add parallax effect
+          this.imagePara.tilePosition.set(-this.game.camera.x*this.parallaxAmmount, -this.game.camera.y*this.parallaxAmmount);
+
         }
 
         /** Use for debug information, called after update() */
         render() {
-          this.game.debug.body(this.player);
+          //this.game.debug.body(this.player);
           this.game.debug.text('current: ' + this.game.time.fps.toString(), 10, 20);
           this.game.debug.text('min: ' + this.game.time.fpsMin.toString(), 10, 40);
           this.game.debug.text('x: ' + this.player.position.x.toPrecision(6), 10, 60);
@@ -72,13 +78,14 @@ module HollowMoon {
           this.map = this.game.add.tilemap(mapName);
 
           this.map.addTilesetImage('platformTiles', mapName + 'Platforms');
-          this.imagePara = this.game.add.image(0, 0, mapName + 'Para');
+          this.imagePara = this.game.add.tileSprite(0, 0, 1024, 576, mapName + 'Para');
           this.imageBG = this.game.add.image(0, 0, mapName + 'BG');
           this.imageFG = this.game.add.image(0, 0, mapName + 'FG');
           this.layerPlatforms = this.map.createLayer('platforms');
 
           //parallax effects
           /*this.layerBG.scrollFactorX = 0.5;*/
+          this.imagePara.fixedToCamera = true;
 
           //set up character
           this.createPlayer();
@@ -94,6 +101,8 @@ module HollowMoon {
           this.player.z = 3;
           this.imageFG.z = 4;
           this.worldGroup.sort();
+
+          /*this.imagePara.fixedToCamera = true;*/
 
           //collisions
           this.map.setCollisionByExclusion([0], true, 'platforms');

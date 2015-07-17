@@ -91,6 +91,7 @@ var HollowMoon;
             this.physics.setBoundsToWorld();
             this.stage.backgroundColor = '2f9d8c';
             this.createMap('mapStart');
+            this.parallaxAmmount = 0.3;
             //creates tap eventListener and calls starFull() when triggered. This is only used for testing until a more permanent implementation.
             this.game.input.onTap.add(this.startFull, this.game.scale);
             this.game.time.advancedTiming = true;
@@ -105,10 +106,12 @@ var HollowMoon;
             if (this.game.input.keyboard.isDown(HollowMoon.KeyBindings.openDoor)) {
                 this.checkZoneDoors();
             }
+            //add parallax effect
+            this.imagePara.tilePosition.set(-this.game.camera.x * this.parallaxAmmount, -this.game.camera.y * this.parallaxAmmount);
         };
         /** Use for debug information, called after update() */
         GameWorld.prototype.render = function () {
-            this.game.debug.body(this.player);
+            //this.game.debug.body(this.player);
             this.game.debug.text('current: ' + this.game.time.fps.toString(), 10, 20);
             this.game.debug.text('min: ' + this.game.time.fpsMin.toString(), 10, 40);
             this.game.debug.text('x: ' + this.player.position.x.toPrecision(6), 10, 60);
@@ -136,12 +139,13 @@ var HollowMoon;
             var jsonFile = this.cache.getJSON(mapName + 'J');
             this.map = this.game.add.tilemap(mapName);
             this.map.addTilesetImage('platformTiles', mapName + 'Platforms');
-            this.imagePara = this.game.add.image(0, 0, mapName + 'Para');
+            this.imagePara = this.game.add.tileSprite(0, 0, 1024, 576, mapName + 'Para');
             this.imageBG = this.game.add.image(0, 0, mapName + 'BG');
             this.imageFG = this.game.add.image(0, 0, mapName + 'FG');
             this.layerPlatforms = this.map.createLayer('platforms');
             //parallax effects
             /*this.layerBG.scrollFactorX = 0.5;*/
+            this.imagePara.fixedToCamera = true;
             //set up character
             this.createPlayer();
             //add all the tilemap layers to the worldGroup
@@ -154,6 +158,7 @@ var HollowMoon;
             this.player.z = 3;
             this.imageFG.z = 4;
             this.worldGroup.sort();
+            /*this.imagePara.fixedToCamera = true;*/
             //collisions
             this.map.setCollisionByExclusion([0], true, 'platforms');
             //zone init
@@ -282,10 +287,14 @@ var HollowMoon;
     var Player = (function (_super) {
         __extends(Player, _super);
         function Player(game, x, y) {
-            _super.call(this, game, x, y, 'elisa', 0);
-            this.anchor.setTo(0.5);
-            this.animations.add('walk', [21, 22, 23, 24, 25], 10, true);
-            this.animations.add('jump', [9, 10, 11, 12], 10, true);
+            _super.call(this, game, x, y, 'charSprite', 'standing');
+            /*this.anchor.setTo(0.5);*/
+            //create the animations
+            this.animations.add('walkRight', ['walkRight'], 10, true);
+            this.animations.add('walkLeft', ['walkLeft'], 10, true);
+            this.animations.add('jumpRight', ['jumpRight'], 10, true);
+            this.animations.add('jumpLeft', ['jumpLeft'], 10, true);
+            /*this.animations.add('walkRight', Phaser.Animation.generateFrameNames('octopus', 0, 24, '', 4), 30, true);*/
             game.add.existing(this);
             game.physics.arcade.enable(this);
             this.body.gravity.y = 300;
@@ -303,23 +312,25 @@ var HollowMoon;
             if (this.game.input.keyboard.isDown(HollowMoon.KeyBindings.moveRight)) {
                 if (this.pBody.onFloor()) {
                     this.pBody.velocity.x = this.walkSpeed;
-                    this.animations.play('walk');
+                    this.animations.play('walkRight');
                 }
                 else {
                     this.pBody.velocity.x = this.fallSpeed;
+                    this.animations.play('jumpRight');
                 }
             }
             else if (this.game.input.keyboard.isDown(HollowMoon.KeyBindings.moveLeft)) {
                 if (this.pBody.onFloor()) {
                     this.pBody.velocity.x = -this.walkSpeed;
-                    this.animations.play('jump');
+                    this.animations.play('walkLeft');
                 }
                 else {
                     this.pBody.velocity.x = -this.fallSpeed;
+                    this.animations.play('jumpLeft');
                 }
             }
             else {
-                this.animations.frame = 0;
+                this.animations.frameName = 'standing';
             }
             if (this.game.input.keyboard.isDown(HollowMoon.KeyBindings.jump) && this.pBody.onFloor()) {
                 this.body.velocity.y = this.jumpSpeed;
@@ -340,6 +351,7 @@ var HollowMoon;
             this.preloadBar = this.game.add.sprite(200, 250, 'preloadBar');
             this.load.setPreloadSprite(this.preloadBar);
             this.load.spritesheet('elisa', 'gameRes/sprites/elisa.png', 56, 56);
+            this.load.atlas('charSprite', 'gameRes/sprites/charSprite.png', 'gameRes/sprites/charSprite.json');
             //Load all the data required for TileMaps
             for (var map in HollowMoon.MapList) {
                 var jsonFile = this.cache.getJSON(map + 'J');

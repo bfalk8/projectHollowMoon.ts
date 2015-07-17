@@ -8,6 +8,7 @@ module HollowMoon {
             this.load.setPreloadSprite(this.preloadBar);
 
             this.load.spritesheet('elisa', 'gameRes/sprites/elisa.png', 56, 56);
+            this.load.atlas('charSprite', 'gameRes/sprites/charSprite.png', 'gameRes/sprites/charSprite.json');
 
             //Load all the data required for TileMaps
             for(var map in MapList) {
