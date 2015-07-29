@@ -1,0 +1,52 @@
+{"frames": [
+
+{
+	"filename": "jumpLeft",
+	"frame": {"x":2,"y":2,"w":48,"h":78},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":78},
+	"sourceSize": {"w":48,"h":78}
+},
+{
+	"filename": "jumpRight",
+	"frame": {"x":2,"y":82,"w":48,"h":78},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":78},
+	"sourceSize": {"w":48,"h":78}
+},
+{
+	"filename": "standing",
+	"frame": {"x":2,"y":162,"w":48,"h":78},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":78},
+	"sourceSize": {"w":48,"h":78}
+},
+{
+	"filename": "walkLeft",
+	"frame": {"x":2,"y":242,"w":48,"h":78},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":78},
+	"sourceSize": {"w":48,"h":78}
+},
+{
+	"filename": "walkRight",
+	"frame": {"x":2,"y":322,"w":48,"h":78},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":78},
+	"sourceSize": {"w":48,"h":78}
+}],
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "charSprite.png",
+	"format": "RGBA8888",
+	"size": {"w":52,"h":402},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:965e30ecda09a2ffb17885896c68c5d1:f8e394f020d3ce5745c8fbaa1347948e:ea1f6bb8628b2e8c0b0ff06e01f7c784$"
+}
+}

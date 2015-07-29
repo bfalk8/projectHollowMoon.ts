@@ -7,27 +7,26 @@ module HollowMoon {
             this.preloadBar = this.game.add.sprite(200, 250, 'preloadBar');
             this.load.setPreloadSprite(this.preloadBar);
 
-            // this.load.image('titlepage', 'gameRes/titlepage.jpg');
-            // this.load.image('logo', 'gameRes/logo.png');
-            // this.load.audio('music', 'gameRes/title.mp3', true);
             this.load.spritesheet('elisa', 'gameRes/sprites/elisa.png', 56, 56);
-            //this.load.tilemap('mapStart', 'gameRes/tilemaps/mapStart.json', null, Phaser.Tilemap.TILED_JSON);
-            //this.load.tilemap('mapSecond', 'gameRes/tilemaps/mapSecond.json', null, Phaser.Tilemap.TILED_JSON);
-            /*this.load.image('extBG', 'gameRes/tilemaps/extBG.png');
-            this.load.image('extPara', 'gameRes/tilemaps/extPara.png');
-            this.load.image('platformTiles', 'gameRes/tilemaps/platformTiles.png');*/
-            /*this.load.json('mapStartJ', 'gameRes/tilemaps/mapStart.json');
-            this.load.json('mapSecondJ', 'gameRes/tilemaps/mapSecond.json');*/
-            //this.load.image('test2BG', 'gameRes/tilemaps/test2.png');
+            this.load.atlas('charSprite', 'gameRes/sprites/charSprite.png', 'gameRes/sprites/charSprite.json');
 
             //Load all the data required for TileMaps
             for(var map in MapList) {
               var jsonFile = this.cache.getJSON(map + 'J');
-              var tilePath = 'gameRes/tilemaps/'
+              var tilePath = 'gameRes/tilemaps/';
               this.load.tilemap(map, '', jsonFile, Phaser.Tilemap.TILED_JSON);
-              var bgPath:string = tilePath + jsonFile.tilesets[0].image;
-              var platformPath:string = tilePath + jsonFile.tilesets[1].image;
-              this.load.image(map + 'BG', bgPath);
+              //finds all the image layers in the Tiled json
+              var imageArr = jsonFile.layers.filter(function ( element ) {
+                return element.type === 'imagelayer';
+              });
+              //loads all the images from the image layers
+              for (var image in imageArr) {
+                this.load.image(map + imageArr[image].name, tilePath + imageArr[image].image);
+              }
+              //finds and loads the sprite sheet for the platform tilemap layer
+              var platformPath:string = tilePath + jsonFile.tilesets.filter(function (element) {
+                return element.name === 'platformTiles';
+              })[0].image;
               this.load.image(map + 'Platforms', platformPath);
             }
 
