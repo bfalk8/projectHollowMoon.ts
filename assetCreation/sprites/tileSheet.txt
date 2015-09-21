@@ -1,0 +1,5 @@
+tilesFloor = 0 0 32 32
+tilesMovingPlatform = 32 0 32 32
+tilesNoClip = 0 32 32 32
+tilesStairs = 32 32 32 32
+tilesWall = 64 0 32 32
