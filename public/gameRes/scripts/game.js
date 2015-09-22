@@ -90,7 +90,7 @@ var HollowMoon;
             this.physics.startSystem(Phaser.Physics.ARCADE);
             this.physics.setBoundsToWorld();
             this.stage.backgroundColor = '2f9d8c';
-            this.createMap('mapStart');
+            this.createMap('map1');
             this.parallaxAmmount = 0.3;
             //creates tap eventListener and calls starFull() when triggered. This is only used for testing until a more permanent implementation.
             this.game.input.onTap.add(this.startFull, this.game.scale);
@@ -233,7 +233,7 @@ var HollowMoon;
         openDoor: Phaser.Keyboard.UP
     };
     /**
-     * Changes key bindings for use withing game.
+     * Changes key bindings for use within game.
      * @param {string} binding - The name of the binding to change
      * @param {number} key - The Phaser.Keyboard key to set binding to
      */
@@ -279,7 +279,8 @@ var HollowMoon;
 (function (HollowMoon) {
     HollowMoon.MapList = {
         mapStart: 'mapStart.json',
-        mapSecond: 'mapSecond.json'
+        mapSecond: 'mapSecond.json',
+        map1: 'map1.json'
     };
 })(HollowMoon || (HollowMoon = {}));
 var HollowMoon;
@@ -297,18 +298,37 @@ var HollowMoon;
             /*this.animations.add('walkRight', Phaser.Animation.generateFrameNames('octopus', 0, 24, '', 4), 30, true);*/
             game.add.existing(this);
             game.physics.arcade.enable(this);
-            this.body.gravity.y = 300;
+            this.body.gravity.y = 800;
             this.body.fixedRotation = true;
             this.body.collideWorldBounds = true;
             this.pWorld = this.game.physics.arcade;
             this.pBody = this.body;
             //set Player parameters
-            this.walkSpeed = 150;
-            this.jumpSpeed = -200;
-            this.fallSpeed = 100;
+            this.walkSpeed = 200;
+            this.jumpSpeed = -400;
+            this.fallSpeed = this.walkSpeed;
+            this.runAccel = 0.5;
+            this.runTimer = 0.0;
+            this.jumped = false;
+            this.onStartInput();
         }
         Player.prototype.update = function () {
             this.body.velocity.x = 0;
+            // this.keyboardUpdate();
+            this.controllerUpdate();
+        };
+        /** Initial controller connect */
+        Player.prototype.onStartInput = function () {
+            if (this.game.input.gamepad.active) {
+                this.game.input.gamepad.stop();
+            }
+            else {
+                this.game.input.gamepad.start();
+                this.pad1 = this.game.input.gamepad.pad1;
+            }
+        };
+        /** Handles keyboard input */
+        Player.prototype.keyboardUpdate = function () {
             if (this.game.input.keyboard.isDown(HollowMoon.KeyBindings.moveRight)) {
                 if (this.pBody.onFloor()) {
                     this.pBody.velocity.x = this.walkSpeed;
@@ -334,6 +354,44 @@ var HollowMoon;
             }
             if (this.game.input.keyboard.isDown(HollowMoon.KeyBindings.jump) && this.pBody.onFloor()) {
                 this.body.velocity.y = this.jumpSpeed;
+            }
+        };
+        /** Handles Controller input */
+        Player.prototype.controllerUpdate = function () {
+            // this.pBody.velocity.x = this.walkSpeed * this.pad1.axis(0);
+            if (this.pad1.isDown(Phaser.Gamepad.XBOX360_DPAD_RIGHT)) {
+                if (this.pBody.onFloor()) {
+                    // this.runTimer += this.game.time.physicsElapsed;
+                    this.pBody.velocity.x = this.walkSpeed;
+                    this.animations.play('walkRight');
+                    this.jumped = false;
+                }
+                else {
+                    this.pBody.velocity.x = this.fallSpeed;
+                    this.animations.play('jumpRight');
+                }
+            }
+            else if (this.pad1.isDown(Phaser.Gamepad.XBOX360_DPAD_LEFT)) {
+                if (this.pBody.onFloor()) {
+                    this.pBody.velocity.x = -this.walkSpeed;
+                    this.animations.play('walkLeft');
+                    this.jumped = false;
+                }
+                else {
+                    this.pBody.velocity.x = -this.fallSpeed;
+                    this.animations.play('jumpLeft');
+                }
+            }
+            else {
+                this.animations.frameName = 'standing';
+                this.runTimer = 0.0;
+            }
+            if (this.pad1.isDown(Phaser.Gamepad.XBOX360_A) && this.pBody.onFloor()) {
+                this.body.velocity.y = this.jumpSpeed;
+                this.jumped = true;
+            }
+            if (this.pad1.isUp(Phaser.Gamepad.XBOX360_A) && this.jumped && this.pBody.velocity.y < 0) {
+                this.pBody.velocity.y = 0;
             }
         };
         return Player;

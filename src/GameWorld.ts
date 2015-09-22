@@ -21,7 +21,7 @@ module HollowMoon {
           this.physics.startSystem(Phaser.Physics.ARCADE);
           this.physics.setBoundsToWorld();
           this.stage.backgroundColor = '2f9d8c';
-          this.createMap('mapStart');
+          this.createMap('map1');
           this.parallaxAmmount = 0.3;
 
           //creates tap eventListener and calls starFull() when triggered. This is only used for testing until a more permanent implementation.

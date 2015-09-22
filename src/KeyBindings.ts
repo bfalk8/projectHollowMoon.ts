@@ -11,12 +11,14 @@ module HollowMoon {
   };
 
   /**
-   * Changes key bindings for use withing game.
+   * Changes key bindings for use within game.
    * @param {string} binding - The name of the binding to change
    * @param {number} key - The Phaser.Keyboard key to set binding to
    */
   export function changeKey(binding:string, key:number) {
     KeyBindings[binding] = key;
   }
+
+  
 
 }
