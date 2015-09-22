@@ -3,38 +3,46 @@ module HollowMoon {
       walkSpeed: number;
       jumpSpeed: number;
       fallSpeed: number;
+      runSpeed: number;
       runAccel: number;
       runTimer: number;
+      baseGravity: number;
       pWorld: Phaser.Physics.Arcade;
       pBody: Phaser.Physics.Arcade.Body;
       pad1: Phaser.SinglePad;
       jumped: boolean;
+      onStairs: boolean;
+      stairsLine: Phaser.Line;
 
       constructor(game: Phaser.Game, x: number, y: number) {
         super(game, x, y, 'charSprite', 'standing');
-        /*this.anchor.setTo(0.5);*/
+        this.anchor.setTo(0.5,1);
         //create the animations
         this.animations.add('walkRight', ['walkRight'], 10, true);
         this.animations.add('walkLeft', ['walkLeft'], 10, true);
         this.animations.add('jumpRight', ['jumpRight'], 10, true);
         this.animations.add('jumpLeft', ['jumpLeft'], 10, true);
         /*this.animations.add('walkRight', Phaser.Animation.generateFrameNames('octopus', 0, 24, '', 4), 30, true);*/
+        //set Player parameters
+        this.walkSpeed = 200;
+        this.jumpSpeed = -400;
+        this.fallSpeed = this.walkSpeed;
+        this.runSpeed = this.walkSpeed * 1.5;
+        this.runAccel = 0.5;
+        this.runTimer = 0.0;
+        this.jumped = false;
+        this.onStairs = false;
+        this.baseGravity = 800;
+
         game.add.existing(this);
         game.physics.arcade.enable(this);
-        this.body.gravity.y = 800;
+        this.body.gravity.y = this.baseGravity;
 
         this.body.fixedRotation = true;
         this.body.collideWorldBounds = true;
         this.pWorld = this.game.physics.arcade;
         this.pBody = this.body;
-
-        //set Player parameters
-        this.walkSpeed = 200;
-        this.jumpSpeed = -400;
-        this.fallSpeed = this.walkSpeed;
-        this.runAccel = 0.5;
-        this.runTimer = 0.0;
-        this.jumped = false;
+        this.stairsLine = new Phaser.Line(0,0,100,100);
         this.onStartInput();
       }
 
@@ -42,6 +50,7 @@ module HollowMoon {
         this.body.velocity.x = 0;
         // this.keyboardUpdate();
         this.controllerUpdate();
+        this.stairsLine.setTo(this.x-50, this.y-20, this.x+50, this.y-20);
 
       }
 
@@ -84,17 +93,22 @@ module HollowMoon {
       /** Handles Controller input */
       controllerUpdate() {
         // this.pBody.velocity.x = this.walkSpeed * this.pad1.axis(0);
-        if(this.pad1.isDown(Phaser.Gamepad.XBOX360_DPAD_RIGHT)) {
+        if(this.pad1.isDown(ControllerBindings.moveRight)) {
           if(this.pBody.onFloor()) {
             // this.runTimer += this.game.time.physicsElapsed;
             this.pBody.velocity.x = this.walkSpeed;
+            this.animations.play('walkRight');
+            this.jumped = false;
+          } else if(this.onStairs) {
+            this.pBody.velocity.x = this.walkSpeed;
+            this.pBody.velocity.y = -this.walkSpeed;
             this.animations.play('walkRight');
             this.jumped = false;
           } else {
             this.pBody.velocity.x = this.fallSpeed;
             this.animations.play('jumpRight');
           }
-        } else if (this.pad1.isDown(Phaser.Gamepad.XBOX360_DPAD_LEFT)) {
+        } else if (this.pad1.isDown(ControllerBindings.moveLeft)) {
           if(this.pBody.onFloor()){
             this.pBody.velocity.x = -this.walkSpeed;
             this.animations.play('walkLeft');
@@ -107,13 +121,29 @@ module HollowMoon {
           this.animations.frameName = 'standing';
           this.runTimer = 0.0;
         }
-        if(this.pad1.isDown(Phaser.Gamepad.XBOX360_A) && this.pBody.onFloor()) {
+        if(this.pad1.isDown(ControllerBindings.jump) && this.pBody.onFloor()) {
           this.body.velocity.y = this.jumpSpeed;
           this.jumped = true;
         }
-        if(this.pad1.isUp(Phaser.Gamepad.XBOX360_A) && this.jumped && this.pBody.velocity.y < 0) {
+        if(this.pad1.isUp(ControllerBindings.jump) && this.jumped && this.pBody.velocity.y < 0) {
           this.pBody.velocity.y = 0;
         }
+        if(this.pad1.isDown(ControllerBindings.dodge)){
+          //this.onStairs = true;
+          this.pBody.gravity.y = 0;
+          this.pBody.velocity.y = 0;
+          // this.pBody.enable = false;
+        } else {
+          //this.onStairs = false;
+          //this.pBody.gravity.y = this.baseGravity;
+          // this.pBody.enable = true;
+        }
+      }
+
+      setStairs(stair: Phaser.Line) {
+        this.onStairs = true;
+        this.pBody.gravity.y = 0;
+        this.pBody.velocity.y = 0;
       }
 
     }

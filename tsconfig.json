@@ -19,6 +19,7 @@
         "./src/MapData.ts",
         "./src/Player.ts",
         "./src/Preloader.ts",
+        "./src/Slope.ts",
         "./src/Zone.ts"
     ]
 }

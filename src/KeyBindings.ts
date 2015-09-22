@@ -19,6 +19,13 @@ module HollowMoon {
     KeyBindings[binding] = key;
   }
 
-  
+  export var ControllerBindings = {
+    moveLeft: Phaser.Gamepad.XBOX360_DPAD_LEFT,
+    moveRight: Phaser.Gamepad.XBOX360_DPAD_RIGHT,
+    jump: Phaser.Gamepad.XBOX360_A,
+    crouch: Phaser.Gamepad.XBOX360_DPAD_DOWN,
+    dodge: Phaser.Gamepad.XBOX360_B,
+    openDoor: Phaser.Gamepad.XBOX360_DPAD_UP
+  }
 
 }

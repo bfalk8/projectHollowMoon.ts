@@ -95,10 +95,13 @@ var HollowMoon;
             //creates tap eventListener and calls starFull() when triggered. This is only used for testing until a more permanent implementation.
             this.game.input.onTap.add(this.startFull, this.game.scale);
             this.game.time.advancedTiming = true;
+            this.stair = new Phaser.Line(250, 224, 400, 40);
+            console.log(this.stair.perpSlope);
         };
         /** Called every frame, heart of the game loop */
         GameWorld.prototype.update = function () {
             this.game.physics.arcade.collide(this.player, this.layerPlatforms);
+            this.checkStairs();
             if (this.game.input.keyboard.isDown(Phaser.Keyboard.F)) {
                 this.game.time.fpsMin = 60;
             }
@@ -116,6 +119,10 @@ var HollowMoon;
             this.game.debug.text('min: ' + this.game.time.fpsMin.toString(), 10, 40);
             this.game.debug.text('x: ' + this.player.position.x.toPrecision(6), 10, 60);
             this.game.debug.text('y: ' + this.player.position.y.toPrecision(6), 10, 80);
+            this.game.debug.geom(this.stairs[0], 'green');
+            this.game.debug.text('stairs: ' + this.player.onStairs, 10, 100);
+            this.game.debug.geom(this.player.stairsLine, 'green');
+            this.game.debug.geom(this.stair, 'red');
         };
         /** Used for going into Fullscreen mode.*/
         GameWorld.prototype.startFull = function () {
@@ -186,6 +193,15 @@ var HollowMoon;
                 var currZone = zoneDoors[zone];
                 this.zoneDoors.push(new HollowMoon.Zone(currZone.x, currZone.y, currZone.width, currZone.height, currZone.name));
             }
+            //stairs
+            var zoneStairs = zones.objects.filter(function (element) {
+                return element.type === 'stairs';
+            });
+            this.stairs = [];
+            for (var zone in zoneStairs) {
+                var currZone = zoneStairs[zone];
+                this.stairs.push(new HollowMoon.Slope(currZone.x, currZone.y - currZone.height, currZone.width, currZone.height, currZone.name));
+            }
         };
         /** Finds object with proper property */
         GameWorld.prototype.findElement = function (prop) {
@@ -217,6 +233,21 @@ var HollowMoon;
                 }
             }
         };
+        /** Checks if player collides with stairs */
+        GameWorld.prototype.checkStairs = function () {
+            var playerCheck = new Phaser.Rectangle(this.player.body.x, this.player.body.y, this.player.body.width, this.player.body.height);
+            /*for(var zone in this.stairs) {
+              if(Phaser.Rectangle.intersects(playerCheck, this.stairs[zone])) {
+                this.player.onStairs = true;
+                break;
+              } else {
+                this.player.onStairs = false;
+              }
+            }*/
+            if (this.stair.intersects(this.player.stairsLine)) {
+                this.player.setStairs(this.stair);
+            }
+        };
         return GameWorld;
     })(Phaser.State);
     HollowMoon.GameWorld = GameWorld;
@@ -241,6 +272,14 @@ var HollowMoon;
         HollowMoon.KeyBindings[binding] = key;
     }
     HollowMoon.changeKey = changeKey;
+    HollowMoon.ControllerBindings = {
+        moveLeft: Phaser.Gamepad.XBOX360_DPAD_LEFT,
+        moveRight: Phaser.Gamepad.XBOX360_DPAD_RIGHT,
+        jump: Phaser.Gamepad.XBOX360_A,
+        crouch: Phaser.Gamepad.XBOX360_DPAD_DOWN,
+        dodge: Phaser.Gamepad.XBOX360_B,
+        openDoor: Phaser.Gamepad.XBOX360_DPAD_UP
+    };
 })(HollowMoon || (HollowMoon = {}));
 var HollowMoon;
 (function (HollowMoon) {
@@ -289,33 +328,38 @@ var HollowMoon;
         __extends(Player, _super);
         function Player(game, x, y) {
             _super.call(this, game, x, y, 'charSprite', 'standing');
-            /*this.anchor.setTo(0.5);*/
+            this.anchor.setTo(0.5, 1);
             //create the animations
             this.animations.add('walkRight', ['walkRight'], 10, true);
             this.animations.add('walkLeft', ['walkLeft'], 10, true);
             this.animations.add('jumpRight', ['jumpRight'], 10, true);
             this.animations.add('jumpLeft', ['jumpLeft'], 10, true);
             /*this.animations.add('walkRight', Phaser.Animation.generateFrameNames('octopus', 0, 24, '', 4), 30, true);*/
-            game.add.existing(this);
-            game.physics.arcade.enable(this);
-            this.body.gravity.y = 800;
-            this.body.fixedRotation = true;
-            this.body.collideWorldBounds = true;
-            this.pWorld = this.game.physics.arcade;
-            this.pBody = this.body;
             //set Player parameters
             this.walkSpeed = 200;
             this.jumpSpeed = -400;
             this.fallSpeed = this.walkSpeed;
+            this.runSpeed = this.walkSpeed * 1.5;
             this.runAccel = 0.5;
             this.runTimer = 0.0;
             this.jumped = false;
+            this.onStairs = false;
+            this.baseGravity = 800;
+            game.add.existing(this);
+            game.physics.arcade.enable(this);
+            this.body.gravity.y = this.baseGravity;
+            this.body.fixedRotation = true;
+            this.body.collideWorldBounds = true;
+            this.pWorld = this.game.physics.arcade;
+            this.pBody = this.body;
+            this.stairsLine = new Phaser.Line(0, 0, 100, 100);
             this.onStartInput();
         }
         Player.prototype.update = function () {
             this.body.velocity.x = 0;
             // this.keyboardUpdate();
             this.controllerUpdate();
+            this.stairsLine.setTo(this.x - 50, this.y - 20, this.x + 50, this.y - 20);
         };
         /** Initial controller connect */
         Player.prototype.onStartInput = function () {
@@ -359,10 +403,16 @@ var HollowMoon;
         /** Handles Controller input */
         Player.prototype.controllerUpdate = function () {
             // this.pBody.velocity.x = this.walkSpeed * this.pad1.axis(0);
-            if (this.pad1.isDown(Phaser.Gamepad.XBOX360_DPAD_RIGHT)) {
+            if (this.pad1.isDown(HollowMoon.ControllerBindings.moveRight)) {
                 if (this.pBody.onFloor()) {
                     // this.runTimer += this.game.time.physicsElapsed;
                     this.pBody.velocity.x = this.walkSpeed;
+                    this.animations.play('walkRight');
+                    this.jumped = false;
+                }
+                else if (this.onStairs) {
+                    this.pBody.velocity.x = this.walkSpeed;
+                    this.pBody.velocity.y = -this.walkSpeed;
                     this.animations.play('walkRight');
                     this.jumped = false;
                 }
@@ -371,7 +421,7 @@ var HollowMoon;
                     this.animations.play('jumpRight');
                 }
             }
-            else if (this.pad1.isDown(Phaser.Gamepad.XBOX360_DPAD_LEFT)) {
+            else if (this.pad1.isDown(HollowMoon.ControllerBindings.moveLeft)) {
                 if (this.pBody.onFloor()) {
                     this.pBody.velocity.x = -this.walkSpeed;
                     this.animations.play('walkLeft');
@@ -386,13 +436,25 @@ var HollowMoon;
                 this.animations.frameName = 'standing';
                 this.runTimer = 0.0;
             }
-            if (this.pad1.isDown(Phaser.Gamepad.XBOX360_A) && this.pBody.onFloor()) {
+            if (this.pad1.isDown(HollowMoon.ControllerBindings.jump) && this.pBody.onFloor()) {
                 this.body.velocity.y = this.jumpSpeed;
                 this.jumped = true;
             }
-            if (this.pad1.isUp(Phaser.Gamepad.XBOX360_A) && this.jumped && this.pBody.velocity.y < 0) {
+            if (this.pad1.isUp(HollowMoon.ControllerBindings.jump) && this.jumped && this.pBody.velocity.y < 0) {
                 this.pBody.velocity.y = 0;
             }
+            if (this.pad1.isDown(HollowMoon.ControllerBindings.dodge)) {
+                //this.onStairs = true;
+                this.pBody.gravity.y = 0;
+                this.pBody.velocity.y = 0;
+            }
+            else {
+            }
+        };
+        Player.prototype.setStairs = function (stair) {
+            this.onStairs = true;
+            this.pBody.gravity.y = 0;
+            this.pBody.velocity.y = 0;
         };
         return Player;
     })(Phaser.Sprite);
@@ -440,6 +502,18 @@ var HollowMoon;
         return Preloader;
     })(Phaser.State);
     HollowMoon.Preloader = Preloader;
+})(HollowMoon || (HollowMoon = {}));
+var HollowMoon;
+(function (HollowMoon) {
+    var Slope = (function (_super) {
+        __extends(Slope, _super);
+        function Slope(x, y, width, height, name) {
+            _super.call(this, x, y, width, height);
+            this.name = name;
+        }
+        return Slope;
+    })(Phaser.Rectangle);
+    HollowMoon.Slope = Slope;
 })(HollowMoon || (HollowMoon = {}));
 var HollowMoon;
 (function (HollowMoon) {

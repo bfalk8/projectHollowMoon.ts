@@ -12,6 +12,8 @@ module HollowMoon {
         mapName: string;
         zoneEdges: Zone[];
         zoneDoors: Zone[];
+        stairs: Slope[];
+        stair: Phaser.Line;
         parallaxAmmount: number;
 
         /** Called once on load */
@@ -27,11 +29,14 @@ module HollowMoon {
           //creates tap eventListener and calls starFull() when triggered. This is only used for testing until a more permanent implementation.
           this.game.input.onTap.add(this.startFull, this.game.scale);
           this.game.time.advancedTiming = true;
+          this.stair = new Phaser.Line(250, 224, 400, 40);
+          console.log(this.stair.perpSlope);
         }
 
         /** Called every frame, heart of the game loop */
         update() {
           this.game.physics.arcade.collide(this.player, this.layerPlatforms);
+          this.checkStairs();
           if(this.game.input.keyboard.isDown(Phaser.Keyboard.F)) {
             this.game.time.fpsMin = 60;
           }
@@ -52,6 +57,10 @@ module HollowMoon {
           this.game.debug.text('min: ' + this.game.time.fpsMin.toString(), 10, 40);
           this.game.debug.text('x: ' + this.player.position.x.toPrecision(6), 10, 60);
           this.game.debug.text('y: ' + this.player.position.y.toPrecision(6), 10, 80);
+          this.game.debug.geom(this.stairs[0],'green');
+          this.game.debug.text('stairs: ' + this.player.onStairs, 10, 100);
+          this.game.debug.geom(this.player.stairsLine, 'green');
+          this.game.debug.geom(this.stair, 'red');
         }
 
         /** Used for going into Fullscreen mode.*/
@@ -132,6 +141,15 @@ module HollowMoon {
             var currZone = zoneDoors[zone];
             this.zoneDoors.push(new Zone(currZone.x, currZone.y, currZone.width, currZone.height, currZone.name));
           }
+          //stairs
+          var zoneStairs = zones.objects.filter(function ( element ) {
+            return element.type === 'stairs';
+          });
+          this.stairs = [];
+          for (var zone in zoneStairs) {
+            var currZone = zoneStairs[zone];
+            this.stairs.push(new Slope(currZone.x, currZone.y - currZone.height, currZone.width, currZone.height, currZone.name));
+          }
 
         }
 
@@ -167,6 +185,21 @@ module HollowMoon {
             if(Phaser.Rectangle.intersects(playerCheck, this.zoneDoors[zone])) {
               this.createMap(this.zoneDoors[zone].name);
             }
+          }
+        }
+        /** Checks if player collides with stairs */
+        checkStairs() {
+          var playerCheck = new Phaser.Rectangle(this.player.body.x, this.player.body.y, this.player.body.width, this.player.body.height);
+          /*for(var zone in this.stairs) {
+            if(Phaser.Rectangle.intersects(playerCheck, this.stairs[zone])) {
+              this.player.onStairs = true;
+              break;
+            } else {
+              this.player.onStairs = false;
+            }
+          }*/
+          if(this.stair.intersects(this.player.stairsLine)) {
+            this.player.setStairs(this.stair);
           }
         }
 
