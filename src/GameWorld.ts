@@ -198,9 +198,17 @@ module HollowMoon {
               this.player.onStairs = false;
             }
           }*/
-          if(this.stair.intersects(this.player.stairsLine)) {
+          if (this.stairsMath(this.stair)) {
             this.player.setStairs(this.stair);
           }
+        }
+
+        stairsMath(slope: Phaser.Line): boolean {
+          if(slope.intersects(this.player.stairsLine)) {
+
+            return true;
+          }
+          return false;
         }
 
     }
