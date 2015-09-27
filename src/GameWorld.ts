@@ -36,7 +36,7 @@ module HollowMoon {
         /** Called every frame, heart of the game loop */
         update() {
           this.game.physics.arcade.collide(this.player, this.layerPlatforms);
-          this.checkStairs();
+          //this.checkStairs();
           if(this.game.input.keyboard.isDown(Phaser.Keyboard.F)) {
             this.game.time.fpsMin = 60;
           }

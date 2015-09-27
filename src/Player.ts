@@ -6,7 +6,15 @@ module HollowMoon {
       runSpeed: number;
       runAccel: number;
       runTimer: number;
+      dodgeSpeed: number;
+      dodgeTime: number;          //time to dodge in ms
+      dodgeType: DodgeType;
+      dodging: boolean;
+      dodgeTimer: Phaser.Timer;
+      grounded: boolean;        //check for if dodge is reset by touching ground
       baseGravity: number;
+      facing: CharacterFacing;
+      moveable: boolean;
       maxV: Phaser.Point;
       pWorld: Phaser.Physics.Arcade;
       pBody: Phaser.Physics.Arcade.Body;
@@ -33,7 +41,12 @@ module HollowMoon {
         this.runTimer = 0.0;
         this.jumped = false;
         this.onStairs = false;
+        this.facing = CharacterFacing.RIGHT;
         this.baseGravity = 800;
+        this.dodgeSpeed = 800;
+        this.dodgeTime = 250;
+        this.dodging = false;
+        this.moveable = true;
         this.maxV = new Phaser.Point(this.runSpeed, this.fallSpeed);
 
         game.add.existing(this);
@@ -46,38 +59,58 @@ module HollowMoon {
         this.pBody = this.body;
         //this.pBody.maxVelocity = this.maxV;
         this.stairsLine = new Phaser.Line(0,0,100,100);
-        this.onStartInput();
-        /*this.pad1.onUpCallback = function upCall(buttonCode, value, padIndex) {
-            console.log("get schwifty, " + buttonCode + " : " + value + " : " + padIndex);
-            if(buttonCode == ControllerBindings.jump) {
-              console.log("alllllll right!");
-            }
-        }*/
+        this.onStartGamepad();
+
+
       }
 
       update() {
         this.body.velocity.x = 0;
+        if (this.pBody.onFloor())
+          this.grounded = true;
         // this.keyboardUpdate();
         this.controllerUpdate();
+        this.otherMovement();
         this.stairsLine.setTo(this.x-50, this.y-20, this.x+50, this.y-20);
 
       }
 
+      otherMovement() {
+        if(this.dodging) {
+          switch (this.dodgeType){
+            case DodgeType.RIGHT:
+              this.pBody.velocity.x = this.dodgeSpeed;
+              break;
+            case DodgeType.LEFT:
+              this.pBody.velocity.x = -this.dodgeSpeed;
+              break;
+            case DodgeType.BACKRIGHT:
+              this.pBody.velocity.x = this.dodgeSpeed;
+              break;
+            case DodgeType.BACKLEFT:
+              this.pBody.velocity.x = -this.dodgeSpeed;
+              break;
+          }
+        }
+      }
+
       /** Initial controller connect */
-      onStartInput() {
-        if(this.game.input.gamepad.active) {
+      onStartGamepad() {
+        /*if(this.game.input.gamepad.active) {
             this.game.input.gamepad.stop();
         } else {
             this.game.input.gamepad.start();
             this.pad1 = this.game.input.gamepad.pad1;
-        }
+        }*/
+        this.game.input.gamepad.start();
+        this.pad1 = this.game.input.gamepad.pad1;
         // sets up callbacks for controller
-        this.pad1.addCallbacks(this, {
-          onConnect: function(){console.log("Pad1 Connected!")},
-          onDisconnect: function(){console.log("Pad1 Disconnected!")},
-          onDown: function(buttonCode, value){},
-          onUp: Player.prototype.padUp,//function(buttonCode, value){},
-          onAxis: function(pad, axis, value){},
+        this.game.input.gamepad.addCallbacks(this, {
+          onConnect: function(padIndex){console.log("Pad1 Connected!");this.onStartGamepad();},
+          onDisconnect: function(padIndex){console.log("Pad1 Disconnected!")},
+          onDown: function(buttonCode, value, padIndex){},
+          onUp: this.padUp,//function(buttonCode, value){console.log(this.walkSpeed)},
+          onAxis: function(pad, axis, value, padIndex){},
           onFloat: function(buttonCode, value, padIndex){},
         });
       }
@@ -122,18 +155,22 @@ module HollowMoon {
         }
         if(this.pad1.isDown(ControllerBindings.jump)) {
           this.jump();
-          //this.pad1.onUpCallback(this.walkRight());
         }
-        /*if(this.pad1.isUp(ControllerBindings.jump)) {
-          this.jumpStop();
-        }*/
         if(this.pad1.isDown(ControllerBindings.dodge)){
-          this.dodge();
+          //this.dodge();
         }
       }
 
-      padUp(buttonCode, value) {
-        console.log('get schwifty ' + buttonCode + ' ' + value);
+      /** Gets called when a gamepad button is released */
+      padUp(buttonCode, value, padIndex) {
+        switch(buttonCode) {
+          case ControllerBindings.jump :
+            this.jumpCancel();
+            break;
+          case ControllerBindings.dodge :
+            this.dodge();
+            break;
+        }
       }
 
       walkRight() {
@@ -150,6 +187,7 @@ module HollowMoon {
           this.pBody.velocity.x = this.fallSpeed;
           this.animations.play('jumpRight');
         }
+        this.facing = CharacterFacing.RIGHT;
       }
 
       walkLeft() {
@@ -161,25 +199,46 @@ module HollowMoon {
           this.pBody.velocity.x = -this.fallSpeed;
           this.animations.play('jumpLeft');
         }
+        this.facing = CharacterFacing.LEFT;
       }
 
       jump() {
-        console.log('hey')
-         if(this.pBody.onFloor()) {
-           this.body.velocity.y = this.jumpSpeed;
-           this.jumped = true;
-         }
+        if(this.pBody.onFloor() || this.dodging && !this.jumped) {
+          this.body.velocity.y = this.jumpSpeed;
+          this.jumped = true;
+          //cancels dodges
+          this.dodging = false;
+        }
       }
 
-      jumpStop() {
+      jumpCancel() {
         if(this.jumped && this.pBody.velocity.y < 0) {
           this.pBody.velocity.y = 0;
         }
       }
 
       dodge() {
-        //this.pBody.gravity.y = 0;
-        this.pBody.velocity.y = 0;
+        //this.pBody.velocity.y = 0;
+        if (this.pad1.isDown(ControllerBindings.moveRight)) {
+          this.dodgeType = DodgeType.RIGHT;
+        } else if (this.pad1.isDown(ControllerBindings.moveLeft)) {
+          this.dodgeType = DodgeType.LEFT;
+        } else {
+          switch(this.facing) {
+            case CharacterFacing.RIGHT:
+              this.dodgeType = DodgeType.BACKLEFT;
+              break;
+            case CharacterFacing.LEFT:
+              this.dodgeType = DodgeType.BACKRIGHT;
+          }
+        }
+        if (this.grounded) {
+          this.dodging = true;
+          this.grounded = false;
+          this.dodgeTimer = this.game.time.create(false);
+          this.dodgeTimer.add(this.dodgeTime, function(){this.dodging = false;}, this);
+          this.dodgeTimer.start();
+        }
       }
 
       setStairs(stair: Phaser.Line) {
@@ -188,5 +247,17 @@ module HollowMoon {
         this.pBody.velocity.y = 0;
       }
 
+    }
+
+    enum DodgeType {
+      RIGHT,
+      LEFT,
+      BACKRIGHT,
+      BACKLEFT
+    }
+
+    export enum CharacterFacing {
+      RIGHT,
+      LEFT
     }
 }
